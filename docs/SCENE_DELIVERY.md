@@ -10,7 +10,7 @@
 | Назначение | Источник |
 | --- | --- |
 | Указатель активной сцены | `config/scenes/default.json`, 49 байт |
-| Активный профиль | `config/scenes/source-studio/v02/scene.json`, 2 623 байта |
+| Активный профиль | `config/scenes/source-studio/v02/scene.json`, 2 621 байт |
 | Сохранённый исходный профиль | `config/scenes/source-studio/v01/scene.json`, 2 623 байта |
 | Схема и общая проверка | `shared/sceneContract.mjs` / `.d.mts` |
 | Чтение профилей и API | `server/scenes.mjs` |

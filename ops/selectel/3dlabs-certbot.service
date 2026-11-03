@@ -1,0 +1,15 @@
+[Unit]
+Description=Renew only the isolated 3D Labs certificate
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+UMask=0077
+PrivateTmp=true
+NoNewPrivileges=true
+Nice=10
+CPUQuota=20%
+MemoryMax=256M
+TimeoutStartSec=180
+ExecStart=/usr/bin/certbot renew --config /opt/3dlabs/certbot.ini --cert-name 3dlabs-progovori --no-random-sleep-on-renew --quiet --deploy-hook /opt/3dlabs/certbot-deploy.sh

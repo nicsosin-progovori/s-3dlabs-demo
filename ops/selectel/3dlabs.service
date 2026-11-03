@@ -6,8 +6,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/docker start --attach 3dlabs-demo-20261103-v02
-ExecStop=/usr/bin/docker stop --timeout 20 3dlabs-demo-20261103-v02
+ExecStart=/usr/bin/docker start --attach 3dlabs-demo-20261103-v06
+ExecStop=/usr/bin/docker stop --timeout 20 3dlabs-demo-20261103-v06
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=35
