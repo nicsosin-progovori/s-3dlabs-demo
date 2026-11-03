@@ -5,7 +5,8 @@ import {createHash} from 'node:crypto'
 import path from 'node:path'
 import type {SceneProfile} from '../shared/sceneContract.mjs'
 
-const bytes=await readFile(new URL('../config/scenes/source-studio/v01/scene.json',import.meta.url))
+const active=JSON.parse(await readFile(new URL('../config/scenes/default.json',import.meta.url),'utf8'))
+const bytes=await readFile(new URL(`../config/scenes/${active.id}/${active.revision}/scene.json`,import.meta.url))
 const profile=JSON.parse(bytes.toString()) as SceneProfile
 const fingerprint=createHash('sha256').update(bytes).digest('hex')
 const selection={id:profile.id,revision:profile.revision}
@@ -30,13 +31,15 @@ function sameCamera(a:Record<string,any>,b:Record<string,any>){
 }
 
 test('scene metadata has its own verified API and does not start the render queue',async({request})=>{
-  const before=await (await request.get('/api/health')).json(),get=await request.get('/api/scenes/source-studio/v01')
+  const before=await (await request.get('/api/health')).json(),url=`/api/scenes/${selection.id}/${selection.revision}`,get=await request.get(url)
   expect(get.status()).toBe(200);expect(await get.body()).toEqual(bytes);expect(get.headers()['x-scene-sha256']).toBe(fingerprint)
   expect(get.headers()['cache-control']).toBe('no-cache')
   const active=await request.get('/api/scenes/default');expect(active.status()).toBe(200);expect(await active.body()).toEqual(bytes)
-  const head=await request.head('/api/scenes/source-studio/v01');expect(head.status()).toBe(200);expect((await head.body()).length).toBe(0)
-  expect((await request.get('/api/scenes/source-studio/v01',{headers:{'if-none-match':get.headers().etag}})).status()).toBe(304)
-  expect((await request.post('/api/scenes/source-studio/v01',{data:{}})).status()).toBe(405)
+  const head=await request.head(url);expect(head.status()).toBe(200);expect((await head.body()).length).toBe(0)
+  expect((await request.get(url,{headers:{'if-none-match':get.headers().etag}})).status()).toBe(304)
+  expect((await request.post(url,{data:{}})).status()).toBe(405)
+  const legacy=await request.get('/api/scenes/source-studio/v01')
+  expect(legacy.status()).toBe(200);expect(legacy.headers()['x-scene-sha256']).toBe('916f4759156dffcf2a98c3bfb93eccf0da7499d92b20325f7da7cd561741ebd4')
   expect((await request.get('/api/scenes/source-studio/absent')).status()).toBe(404)
   expect((await (await request.get('/api/health')).json()).renderer).toEqual(before.renderer)
 })
@@ -96,7 +99,7 @@ test('scene replacement updates light, environment, shadows and CSS without new 
   const rendered=page.waitForResponse(r=>r.url().endsWith('/api/render')&&r.request().method()==='POST')
   expect(await page.evaluate(()=>window.appName3DVisualisation.getCurrentViewAsImage().then(blob=>blob.type))).toBe('image/png')
   const response=await rendered
-  expect(response.headers()['x-render-scene']).toBe('source-studio@v01');expect(response.headers()['x-render-scene-sha256']).toBe(fingerprint)
+  expect(response.headers()['x-render-scene']).toBe(`${selection.id}@${selection.revision}`);expect(response.headers()['x-render-scene-sha256']).toBe(fingerprint)
   expect(response.request().postDataJSON().version).toBe(5);expect(response.request().postDataJSON().scene.sha256).toBe(fingerprint)
   sameCamera(await page.evaluate(()=>window.appName3DVisualisation.getCamera()),before)
 })
@@ -137,7 +140,7 @@ test('applying a new studio waits for an orbit gesture to end',async({page})=>{
   await page.route('**/api/scenes/source-studio/qa-gesture',route=>fulfill(route,variant('qa-gesture')))
   await page.evaluate(()=>{(window as any).sceneChange=window.appName3DVisualisation.setScene({id:'source-studio',revision:'qa-gesture'})})
   await expect(scene(page)).toHaveAttribute('data-scene-status','waiting-idle')
-  expect(await page.evaluate(()=>window.appName3DVisualisation.getScene().revision)).toBe('v01')
+  expect(await page.evaluate(()=>window.appName3DVisualisation.getScene().revision)).toBe(selection.revision)
   await page.mouse.up();await page.evaluate(()=>(window as any).sceneChange)
   await expect(scene(page)).toHaveAttribute('data-scene-revision','qa-gesture');await expect(scene(page)).toHaveAttribute('data-scene-status','ready')
 })

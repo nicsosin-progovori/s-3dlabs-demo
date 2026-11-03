@@ -27,6 +27,7 @@ import type {Composition} from '../shared/compositionContract.mjs'
 import {compositionNeedsWideStage} from './bottleComposition'
 
 interface CameraResult {image:string;camera:CameraSnapshot}
+type Capture=()=>Promise<CameraResult>
 interface RenderResult extends CameraResult {skin:SkinRef;scene:SceneRef;composition:Composition;decoration:BottleDecoration}
 type Reference='original'|'embedded-final'
 declare global {interface Window {__bottleRender:(request:RenderRequest,reference?:Reference)=>Promise<RenderResult>}}
@@ -43,7 +44,7 @@ window.__bottleRender=async(input,reference)=>{
   finally{active=false}
 }
 function RenderBottle({request,reference,resolve,reject}:{request:RenderRequest;reference?:Reference;resolve:(result:RenderResult)=>void;reject:(error:Error)=>void}){
-  const [model,setModel]=useState<SourceModel|null>(null),capture=useRef<(()=>CameraResult)|null>(null)
+  const [model,setModel]=useState<SourceModel|null>(null),capture=useRef<Capture|null>(null)
   const [scene,setScene]=useState<SceneBundle|null>(null)
   const [logo,setLogo]=useState<LogoAsset|null>(null),[logoReady,setLogoReady]=useState(false)
   const look=useMemo(()=>scene?lookFromScene(scene):null,[scene])
@@ -59,15 +60,15 @@ function RenderBottle({request,reference,resolve,reject}:{request:RenderRequest;
   },[reject,request.skin,request.scene,reference])
   const item=useMemo(()=>model&&logoReady?{key:0,model,settings:bottleSettings(request.state,BOTTLE.colors.find(c=>'bottle-'+c.id===request.skin.id)!.id,request.decoration),logo}:undefined,[model,logoReady,request.state,request.skin,request.decoration,logo])
   const ignore=useCallback(()=>{},[])
-  const onReady=useCallback(()=>{
-    try{if(!capture.current||!model||!scene||!logoReady)throw new Error('Render camera/scene/logo is not ready');const skin=reference?request.skin:(model as SkinnedSourceModel).appearance.ref;resolve({...capture.current(),skin:{...skin},scene:{...scene.ref},composition:request.composition,decoration:request.decoration})}catch(error){reject(error instanceof Error?error:new Error(String(error)))}
+  const onReady=useCallback(async()=>{
+    try{if(!capture.current||!model||!scene||!logoReady)throw new Error('Render camera/scene/logo is not ready');const skin=reference?request.skin:(model as SkinnedSourceModel).appearance.ref;resolve({...await capture.current(),skin:{...skin},scene:{...scene.ref},composition:request.composition,decoration:request.decoration})}catch(error){reject(error instanceof Error?error:new Error(String(error)))}
   },[resolve,reject,model,scene,logoReady,request,reference])
   return look&&<StudioStage imageRender composition={compositionNeedsWideStage(request.composition)} look={look} ready={!!item} moving={false} shadowKey={`server:${request.state}:${look.id}`} onReady={onReady} fallback="WebGL unavailable" pixelRatio={1}>
     {item&&<BottleComposition composition={request.composition} item={item} view={automaticBottleView()} motion={null} cameraEnabled={false} onLayout={ignore} onCamera={ignore} onMotion={ignore} onInteract={ignore}/>}
     <RenderCamera request={request} capture={capture} onError={reject}/>
   </StudioStage>
 }
-function RenderCamera({request,capture,onError}:{request:RenderRequest;capture:React.MutableRefObject<(()=>CameraResult)|null>;onError:(error:Error)=>void}){
+function RenderCamera({request,capture,onError}:{request:RenderRequest;capture:React.MutableRefObject<Capture|null>;onError:(error:Error)=>void}){
   const {camera,gl,invalidate}=useThree()
   useLayoutEffect(()=>{
     if(!(camera instanceof PerspectiveCamera))throw new Error('Perspective camera required')
@@ -79,10 +80,29 @@ function RenderCamera({request,capture,onError}:{request:RenderRequest;capture:R
     camera.fov=snapshot.fov;camera.aspect=snapshot.aspect;camera.near=snapshot.near;camera.far=snapshot.far;camera.zoom=snapshot.zoom
     camera.projectionMatrix.fromArray(snapshot.projectionMatrix)
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();camera.updateMatrixWorld()
-    capture.current=()=>{
-      if(gl.getContext().isContextLost())throw new Error('Render GPU context was lost')
+    capture.current=async()=>{
+      const context=gl.getContext(),started=performance.now()
+      if(context.isContextLost())throw new Error('Render GPU context was lost')
+      if(!(context instanceof WebGL2RenderingContext))throw new Error('WebGL 2 is required for render completion')
+      // CPU submission is not GPU completion. Keep the event loop available so
+      // a software GPU crash can reject the job before PNG readback succeeds.
+      const fence=context.fenceSync(context.SYNC_GPU_COMMANDS_COMPLETE,0)
+      if(!fence)throw new Error('Render GPU fence could not be created')
+      context.flush()
+      try{
+        for(;;){
+          if(context.isContextLost())throw new Error('Render GPU context was lost')
+          const status=context.clientWaitSync(fence,0,0)
+          if(status===context.ALREADY_SIGNALED||status===context.CONDITION_SATISFIED)break
+          if(status===context.WAIT_FAILED)throw new Error('Render GPU completion failed')
+          if(performance.now()-started>85000)throw new Error('Render GPU completion timed out')
+          await new Promise(resolve=>setTimeout(resolve,8))
+        }
+      }finally{context.deleteSync(fence)}
       const image=gl.domElement.toDataURL('image/png')
-      if(gl.getContext().isContextLost())throw new Error('Render GPU context was lost')
+      // Chromium may deliver contextlost after a readback has returned black.
+      await new Promise(resolve=>setTimeout(resolve,0))
+      if(context.isContextLost())throw new Error('Render GPU context was lost')
       return {image,camera:{...snapshot,position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fov:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far,zoom:camera.zoom,projectionMatrix:camera.projectionMatrix.toArray()}}
     }
     invalidate()

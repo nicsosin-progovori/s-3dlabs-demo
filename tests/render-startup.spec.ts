@@ -50,6 +50,21 @@ test('worker rejects a lost GPU context instead of returning a black PNG',async(
   expect(result).toBe('Render GPU context was lost')
 })
 
+test('worker rejects context loss delivered after synchronous PNG readback',async({page,context})=>{
+  const job=await workerJob(page),worker=await context.newPage()
+  await worker.addInitScript(()=>{
+    const original=HTMLCanvasElement.prototype.toDataURL
+    HTMLCanvasElement.prototype.toDataURL=function(...args){
+      const image=original.apply(this,args)
+      setTimeout(()=>this.getContext('webgl2')!.getExtension('WEBGL_lose_context')!.loseContext(),0)
+      return image
+    }
+  })
+  await worker.goto('/render.html');await worker.waitForFunction(()=>typeof window.__bottleRender==='function')
+  const result=await worker.evaluate(job=>window.__bottleRender(job).then(()=> 'resolved',error=>error.message),job)
+  expect(result).toBe('Render GPU context was lost')
+})
+
 test('server startup keeps shadow-baking lights out of the colour-logo beauty pass',async({page})=>{
   const errors:string[]=[]
   const inspect=(origin:string)=>(message:{type:()=>string;text:()=>string})=>{if(message.type()==='error'||/texture units|GL_INVALID|WebGL.*error/i.test(message.text()))errors.push(origin+': '+message.text())}

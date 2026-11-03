@@ -21,6 +21,14 @@ const sha=bytes=>createHash('sha256').update(bytes).digest('hex')
 const bundle=await readScene(root,DEFAULT_SCENE)
 const response=(body=bytes,hash=sha(body))=>new Response(body,{headers:{'X-Scene-SHA256':hash,'Content-Type':'application/json'}})
 
+test('v02 changes only accumulation resolution and preserves immutable v01',async()=>{
+  assert.equal(sha(bytes),'916f4759156dffcf2a98c3bfb93eccf0da7499d92b20325f7da7cd561741ebd4')
+  const next=await readScene(root,{id:'source-studio',revision:'v02'})
+  const expected=structuredClone(raw);expected.revision='v02';expected.settings.shadow.resolution=1024
+  assert.deepEqual(next.profile,expected)
+  assert.deepEqual((await readDefaultScene(root)).ref,next.ref)
+})
+
 test('external v01 preserves the accepted studio, background shader and CSS exactly',()=>{
   const look=lookFromScene(bundle)
   for(const key of Object.keys(STUDIO_LOOK)){

@@ -121,6 +121,9 @@ function Beauty({renderExport,ready,onReady,presentationKey,onPrepared,look,imag
   const pipeline=useMemo(()=>{
     const target=new WebGLRenderTarget(1,1,{type:HalfFloatType,samples:4})
     const composer=new EffectComposer(gl,target);composer.addPass(new RenderPass(scene,camera))
+    // RenderPass writes geometry to readBuffer (4x MSAA). GTAO writes only
+    // fullscreen passes to writeBuffer, which needs neither MSAA nor depth.
+    if(imageRender){composer.writeBuffer.samples=0;composer.writeBuffer.depthBuffer=false}
     const ao=new GTAOPass(scene,camera,1,1)
     ao.blendIntensity=look.ao.intensity
     ao.updateGtaoMaterial({radius:look.ao.radius,thickness:look.ao.thickness,distanceExponent:1.3,distanceFallOff:.8,scale:1,samples:look.ao.samples,screenSpaceRadius:false})
@@ -144,7 +147,7 @@ function Beauty({renderExport,ready,onReady,presentationKey,onPrepared,look,imag
     }
     const output=new OutputPass();composer.addPass(ao);composer.addPass(output)
     return {composer,ao,output}
-  },[gl,scene,camera,look])
+  },[gl,scene,camera,look,imageRender])
   const renderBeauty=useCallback((delta=0)=>{
     // Drei's baking lights start visible before its first frame subscription.
     // Keep them out of the beauty pass, including that first frame and PNGs.

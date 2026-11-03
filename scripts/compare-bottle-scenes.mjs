@@ -3,9 +3,18 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
 import {launchRenderBrowser} from '../server/browser.mjs'
+import {validateRenderRequest} from '../shared/renderContract.mjs'
 
 const root=fileURLToPath(new URL('../',import.meta.url)),base=process.env.BOTTLE_TEST_URL??'http://127.0.0.1:5181'
 const before=process.argv.includes('--before'),out=path.resolve(root,process.env.BOTTLE_COMPARE_OUTPUT??'.cache/qa/bottle-scenes-v01/visual')
+const selected=process.env.BOTTLE_COMPARE_SCENE
+let override
+if(selected){
+  const response=await fetch(base+'/api/scenes/'+selected)
+  if(!response.ok)throw Error('Scene lookup failed: '+response.status)
+  const profile=await response.json()
+  override={id:profile.id,revision:profile.revision,sha256:response.headers.get('x-scene-sha256')}
+}
 await mkdir(out,{recursive:true})
 const browser=await launchRenderBrowser(root)
 try{
@@ -20,14 +29,15 @@ try{
         const app=window.appName3DVisualisation
         await app.setState(state);await app.setSkin({id:'bottle-'+skin,revision:'v01'});await app.setCamera(app.getViews()[view].camera)
         const camera=app.getCamera(),height=800,width=Math.round(height*camera.aspect)
-        return {version:2,product:'bottle',state,skin:app.getSkin(),camera,image:{width,height}}
+        return {version:5,product:'bottle',state,skin:app.getSkin(),scene:app.getScene(),composition:app.getComposition(),decoration:app.getDecoration(),camera,image:{width,height}}
       },{state,skin,view})
       cases.push({name,request})
     }
     await writeFile(path.join(out,'cameras.json'),JSON.stringify(cases,null,2))
   }else cases=JSON.parse(await readFile(path.join(out,'cameras.json'),'utf8'))
   const metrics=[]
-  for(const {name,request}of cases){
+  for(const {name,request:saved}of cases){
+    const request=override?{...validateRenderRequest(saved),scene:override}:saved
     const response=await fetch(base+'/api/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(120_000)})
     if(!response.ok)throw Error(await response.text())
     const bytes=Buffer.from(await response.arrayBuffer())

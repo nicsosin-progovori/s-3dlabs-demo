@@ -26,6 +26,7 @@ export function studioBackdrop(look:StudioLook=STUDIO_LOOK){
     shader.fragmentShader=shader.fragmentShader.replace('#include <shadowmask_pars_fragment>',[
       '#include <shadowmask_pars_fragment>',
       'float studioGroundShadow(){',
+      '  if(studioLiveShadow<=0.)return 1.;',
       '#if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 1',
       '  DirectionalLightShadow source=directionalLightShadows[1];',
       '  return receiveShadow?getShadow(directionalShadowMap[1],source.shadowMapSize,source.shadowIntensity,source.shadowBias,source.shadowRadius,vDirectionalShadowCoord[1]):1.;',
