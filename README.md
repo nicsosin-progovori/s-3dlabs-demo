@@ -1,5 +1,7 @@
 # S. 3DLABS
 
+> **Архитектурная документация:** [`docs/architecture/`](docs/architecture/README.md) — живой разбор контрактов и слоёв приложения (ведётся отдельно от этого README).
+
 ## Размещение и PNG worker — 3 ноября 2026
 
 Для новой бутылки выбран существующий Selectel и `3d.progovori.ru`;
