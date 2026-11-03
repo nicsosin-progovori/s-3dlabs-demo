@@ -1,0 +1,16 @@
+[Unit]
+Description=3D Labs isolated demonstration
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/docker start --attach 3dlabs-demo-20261103-v02
+ExecStop=/usr/bin/docker stop --timeout 20 3dlabs-demo-20261103-v02
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+
+[Install]
+WantedBy=multi-user.target
