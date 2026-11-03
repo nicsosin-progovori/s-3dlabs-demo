@@ -1,0 +1,19 @@
+{
+  "id": "black-logo-pen",
+  "assetUrl": "/models/pen/pen.glb",
+  "lengthMm": 140,
+  "bodyDiameterMm": 9.480297,
+  "scaleBasis": "provisional-owner-approved",
+  "defaultZone": "beside-clip",
+  "printMeshName": "PEN_PRINT_SURFACE",
+  "printStyle": "laser",
+  "printAngleDeg": 134,
+  "poseYawDeg": 48.2,
+  "viewElevation": 2,
+  "viewPivotFromTipMm": 70,
+  "maxCameraDistance": 12,
+  "zones": [
+    { "id": "none", "label": "Без нанесения", "referenceLabel": "Keine Werbeanbringung", "sizeLabel": "", "widthMm": 0, "heightMm": 0, "centerLengthMm": 94, "angleDeg": 90 },
+    { "id": "beside-clip", "label": "Рядом с клипом", "referenceLabel": "Neben dem Clip Max: 4 x 0,6 cm; Lasergravur", "sizeLabel": "40 × 6 мм · лазер", "widthMm": 40, "heightMm": 6, "centerLengthMm": 94, "angleDeg": 90 }
+  ]
+}

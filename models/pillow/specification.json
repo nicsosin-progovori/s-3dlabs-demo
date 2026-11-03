@@ -1,0 +1,57 @@
+{
+  "id": "pillow",
+  "label": {
+    "de": "Massagekissen",
+    "en": "Massage pillow"
+  },
+  "code": "MO3154 · Memory foam",
+  "size": "220 × 220 × 109 mm",
+  "source": "https://www.source-werbeartikel.com/wiederaufladbares-massagkissen",
+  "assetUrl": "/models/pillow/pillow.glb",
+  "states": [
+    {
+      "id": "ready",
+      "label": {
+        "de": "Mit Gurten",
+        "en": "With straps"
+      },
+      "elevation": 0.85
+    }
+  ],
+  "colors": [
+    {
+      "id": "black",
+      "hex": "#202428",
+      "label": {
+        "de": "Schwarz / Grau",
+        "en": "Black / grey"
+      }
+    }
+  ],
+  "zones": [
+    {
+      "id": "side",
+      "label": {
+        "de": "Seite 1",
+        "en": "Side 1"
+      },
+      "surface": "side",
+      "widthMm": 80,
+      "heightMm": 40,
+      "surfaceWidthMm": 80,
+      "surfaceHeightMm": 40,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "techniques": [
+        "embroidery",
+        "transfer",
+        "reflective",
+        "screen-transfer"
+      ],
+      "azimuth": 108
+    }
+  ],
+  "defaultTechnique": "embroidery"
+}

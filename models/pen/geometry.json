@@ -1,0 +1,25 @@
+{
+  "glbSha256": "d9bed8eb81e2935a58a03614425b35342cafd6380aca44ae094252b1d6ae3931",
+  "lengthMm": 140,
+  "sourceLengthM": 2.5820478200912476,
+  "bodyDiameterMm": 9.480297,
+  "circumferenceMm": 29.783231,
+  "sourceTriangles": 95916,
+  "bodyTriangles": 12796,
+  "printTriangles": 2048,
+  "sourceHashes": {
+    "Meshy_AI_Black_Logo_Pen_1019114051_texture.fbx": "82352a0e8cd9a3226407506a5ba6fc8fa1816ad6c2c043aacca6eb7033a0f293",
+    "Meshy_AI_Black_Logo_Pen_1019114051_texture.png": "c622c7662b4d3f31671709b773a74283c9e36d049db68d07647644cc6ee91c1e",
+    "Meshy_AI_Black_Logo_Pen_1019114051_texture_metallic.png": "605db0d2c8f314cb99bed72aea24d67ba2a1101d2866e0e2f018e70d2fbf0703",
+    "Meshy_AI_Black_Logo_Pen_1019114051_texture_normal.png": "bc23939372f10465cfdae3a0444150ad0725712e228e74dc0182f39fe4532422",
+    "Meshy_AI_Black_Logo_Pen_1019114051_texture_roughness.png": "288947f410e9aadc9f83ae8929ac694aefccdbab7f03003e9d4824ba566761f9"
+  },
+  "derivation": "clean geometry and procedural PBR materials reconstructed from owner reference; original FBX and maps retained separately",
+  "referenceSha256": "1184f5527fc30761a145a7a009499ffa1e5c2bca265c8210b78e4b3740c3e69b",
+  "canonicalFrame": "glTF Y up; pen rests on XZ plane; default view projects tip bottom-left, button top-right",
+  "printSurface": {
+    "widthMm": 140,
+    "heightMm": 29.783231,
+    "axis": "U along pen; V around barrel"
+  }
+}

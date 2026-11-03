@@ -1,0 +1,18 @@
+{
+  "id": "tan-notebook-agnese",
+  "assetUrl": "/models/notebook/notebook.glb",
+  "widthMm": 148,
+  "heightMm": 210,
+  "scaleBasis": "provisional-a5-from-owner-card",
+  "defaultZone": "cover",
+  "printMeshName": "NOTEBOOK_PRINT_SURFACE",
+  "printStyle": "color",
+  "materialFinish": { "roughness": 0.88, "metallic": 0, "normalStrength": 0.35 },
+  "poseYawDeg": -33,
+  "viewElevation": 1.4,
+  "viewPivotFromBottomMm": 105,
+  "zones": [
+    { "id": "none", "label": "Без нанесения", "referenceLabel": "Keine Werbeanbringung", "sizeLabel": "", "widthMm": 0, "heightMm": 0, "centerXMm": 0, "centerYMm": 0, "angleDeg": 90 },
+    { "id": "cover", "label": "На обложке", "referenceLabel": "Auf dem Einband Max: 10 x 15 cm; Digitaldruck vollfarbig", "sizeLabel": "100 × 150 мм · цвет", "widthMm": 100, "heightMm": 150, "centerXMm": 0, "centerYMm": 0, "angleDeg": 90 }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "id": "bottle",
+  "label": {
+    "de": "Isolierflasche",
+    "en": "Insulated bottle"
+  },
+  "code": "MO9431 · 500 ml",
+  "size": "Ø70 × 210 mm",
+  "source": "https://www.source-werbeartikel.com/isolierflasche-500ml-44-mo9431-c",
+  "assetUrl": "/models/bottle/bottle.glb",
+  "states": [
+    {
+      "id": "closed",
+      "label": {
+        "de": "Geschlossen",
+        "en": "Closed"
+      },
+      "elevation": 0.29
+    },
+    {
+      "id": "open",
+      "label": {
+        "de": "Deckel ab",
+        "en": "Lid removed"
+      },
+      "elevation": 0.42
+    },
+    {
+      "id": "lying",
+      "label": {
+        "de": "Liegend",
+        "en": "Lying down"
+      },
+      "elevation": 0.8
+    }
+  ],
+  "colors": [
+    {
+      "id": "black",
+      "hex": "#171d22",
+      "label": {
+        "de": "Schwarz",
+        "en": "Black"
+      }
+    },
+    {
+      "id": "blue",
+      "hex": "#17409b",
+      "label": {
+        "de": "Blau",
+        "en": "Blue"
+      }
+    },
+    {
+      "id": "red",
+      "hex": "#a72e31",
+      "label": {
+        "de": "Rot",
+        "en": "Red"
+      }
+    },
+    {
+      "id": "white",
+      "hex": "#eeeee9",
+      "label": {
+        "de": "Weiß",
+        "en": "White"
+      },
+      "metalness": 0.12,
+      "roughness": 0.34
+    },
+    {
+      "id": "green",
+      "hex": "#11815a",
+      "label": {
+        "de": "Grün",
+        "en": "Green"
+      }
+    },
+    {
+      "id": "orange",
+      "hex": "#b85532",
+      "label": {
+        "de": "Orange",
+        "en": "Orange"
+      }
+    },
+    {
+      "id": "turquoise",
+      "hex": "#079bbd",
+      "label": {
+        "de": "Türkis",
+        "en": "Turquoise"
+      }
+    },
+    {
+      "id": "silver",
+      "hex": "#aeb4b8",
+      "label": {
+        "de": "Mattsilber",
+        "en": "Matt silver"
+      },
+      "metalness": 0.95,
+      "roughness": 0.48
+    },
+    {
+      "id": "navy",
+      "hex": "#22394c",
+      "label": {
+        "de": "Marineblau",
+        "en": "Navy"
+      }
+    }
+  ],
+  "zones": [
+    {
+      "surface": "body",
+      "surfaceWidthMm": 225,
+      "surfaceHeightMm": 142,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "azimuth": 20,
+      "id": "front",
+      "label": {
+        "de": "Vorderseite",
+        "en": "Front"
+      },
+      "widthMm": 40,
+      "heightMm": 80,
+      "techniques": [
+        "laser",
+        "pad"
+      ]
+    },
+    {
+      "id": "lid",
+      "label": {
+        "de": "Bambusdeckel",
+        "en": "Bamboo lid"
+      },
+      "surface": "lid",
+      "widthMm": 35,
+      "heightMm": 35,
+      "surfaceWidthMm": 35,
+      "surfaceHeightMm": 35,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "techniques": [
+        "laser",
+        "pad",
+        "doming"
+      ],
+      "azimuth": 0,
+      "elevation": 2.4,
+      "wood": true,
+      "circle": true
+    },
+    {
+      "surface": "body",
+      "surfaceWidthMm": 225,
+      "surfaceHeightMm": 142,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "azimuth": 20,
+      "id": "roundscreen",
+      "label": {
+        "de": "Rundum · Siebdruck",
+        "en": "Wrap · screen print"
+      },
+      "widthMm": 200,
+      "heightMm": 120,
+      "techniques": [
+        "screen"
+      ]
+    },
+    {
+      "surface": "body",
+      "surfaceWidthMm": 225,
+      "surfaceHeightMm": 142,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "azimuth": 20,
+      "id": "wrap360",
+      "label": {
+        "de": "Rundum · 360°",
+        "en": "Wrap · 360°"
+      },
+      "widthMm": 225,
+      "heightMm": 142,
+      "techniques": [
+        "digital",
+        "laser360"
+      ]
+    },
+    {
+      "surface": "body",
+      "surfaceWidthMm": 225,
+      "surfaceHeightMm": 150,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "azimuth": 20,
+      "id": "sublimation",
+      "label": {
+        "de": "Rundum · Sublimation",
+        "en": "Wrap · sublimation"
+      },
+      "widthMm": 225,
+      "heightMm": 150,
+      "techniques": [
+        "sublimation"
+      ]
+    }
+  ],
+  "defaultTechnique": "laser"
+}

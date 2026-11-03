@@ -1,0 +1,14 @@
+.endo-studio .endo-state-picker { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.source-studio.endo-studio .color-picker { justify-content: flex-start; gap: 12px; }
+.source-studio.endo-studio .color-picker button { width: 42px; height: 38px; }
+.endo-studio .view-label { min-height: 12px; }
+.endo-studio .viewport[data-transitioning="true"] .view-label { color: #8c4b33; }
+.source-studio.endo-studio .viewport:is([data-view="branding"],[data-view="fabric"],[data-view="sensor"],[data-view="buckle"],[data-view="package"]) .bottle-heading > div { padding: 7px 9px; margin: -7px -9px; border-radius: 7px; background: #f3f3edef; backdrop-filter: blur(8px); }
+@media (max-width: 960px) {
+  .endo-studio .viewport:is([data-view="fabric"],[data-view="sensor"],[data-view="buckle"],[data-view="package"]) .bottle-heading > div { padding: 7px 9px; margin: -7px -9px; border-radius: 7px; background: #f3f3edef; backdrop-filter: blur(8px); }
+}
+@media (max-width: 600px) {
+  .endo-studio .view-label { min-height: 25px; line-height: 1.4; }
+  .endo-studio .color-picker { gap: 12px; }
+  .endo-studio .color-picker button { width: 42px; height: 44px; }
+}

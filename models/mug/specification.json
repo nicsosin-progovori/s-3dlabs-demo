@@ -1,0 +1,16 @@
+{
+  "id": "black-and-white-mug",
+  "assetUrl": "/models/mug/mug.glb",
+  "heightMm": 96,
+  "scaleBasis": "provisional-owner-approved",
+  "defaultZone": "front",
+  "printMeshName": "MUG_PRINT_SURFACE",
+  "zones": [
+    { "id": "none", "label": "Без нанесения", "referenceLabel": "Keine Werbeanbringung", "sizeLabel": "", "widthMm": 0, "heightMm": 0, "centerHeightMm": 48, "angleDeg": 90 },
+    { "id": "side-ts", "label": "SIDE TS", "referenceLabel": "SIDE TS 92 x 200 mm", "sizeLabel": "92 × 200 мм", "widthMm": 200, "heightMm": 92, "centerHeightMm": 48, "angleDeg": 0 },
+    { "id": "roundscreen", "label": "ROUNDSCREEN", "referenceLabel": "ROUNDSCREEN 80 x 130 mm", "sizeLabel": "80 × 130 мм", "widthMm": 130, "heightMm": 80, "centerHeightMm": 48, "angleDeg": 0 },
+    { "id": "front", "label": "FRONT PAD", "referenceLabel": "FRONT PAD 35 x 45 mm", "sizeLabel": "35 × 45 мм", "widthMm": 45, "heightMm": 35, "centerHeightMm": 54, "angleDeg": 90 },
+    { "id": "back", "label": "BACK PAD", "referenceLabel": "BACK PAD 35 x 45 mm", "sizeLabel": "35 × 45 мм", "widthMm": 45, "heightMm": 35, "centerHeightMm": 54, "angleDeg": -90 },
+    { "id": "opposite", "label": "Напротив ручки", "referenceLabel": "OPPOSITE OF HANDLE 35 x 45 mm", "sizeLabel": "35 × 45 мм", "widthMm": 45, "heightMm": 35, "centerHeightMm": 54, "angleDeg": 0 }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "heightMm": 96,
+  "bodyDiameterMm": 80.267734,
+  "circumferenceMm": 252.168525,
+  "sourceTriangles": 85122,
+  "printTriangles": 24644,
+  "sourceHashes": {
+    "Meshy_AI_Black_and_White_Mug_1019114404_texture.fbx": "95bec9e2e170a8fb9d545980bfc9fcbf3ab93f582223a686eedaf4a33649518f",
+    "Meshy_AI_Black_and_White_Mug_1019114404_texture.png": "a3b07b8dd02965168f7abaa453a509ebf1781dc5d4b3d05b9d7dfa9d4eafb38b",
+    "Meshy_AI_Black_and_White_Mug_1019114404_texture_normal.png": "1a307ac93851405cb12fce85309a2a7e73b0c5e33dc4cc3f182794d05076b74f",
+    "Meshy_AI_Black_and_White_Mug_1019114404_texture_roughness.png": "31b4956514b7b971a8465f0bfdc458a95b24eae23f2d802bb9ebccd64a82903c",
+    "Meshy_AI_Black_and_White_Mug_1019114404_texture_metallic.png": "61de4d43a1ecde79a9331db9af989e6ace1afd9cf1ff9171200304fdf4055c08"
+  },
+  "canonicalFrame": "glTF Y up; handle -X; FRONT +Z; BACK -Z; OPPOSITE +X",
+  "glbSha256": "aa25f5bf0b304bac13bbb3ecbe137a1056dac5d255bf84a5a9cc459c4406eb5a"
+}

@@ -1,0 +1,651 @@
+{
+  "schemaVersion": 3,
+  "modelId": "bottle",
+  "revision": "v03",
+  "compatibility": {
+    "poseContract": "bottle-poses-v01",
+    "focusUnits": "millimetres",
+    "up": "Y",
+    "front": "+Z"
+  },
+  "states": {
+    "closed": {
+      "defaultView": "overview",
+      "views": [
+        {
+          "id": "overview",
+          "label": {
+            "de": "Hero",
+            "en": "Hero"
+          },
+          "camera": {
+            "azimuth": 24,
+            "elevation": -0.05,
+            "fov": 26,
+            "roll": -2,
+            "subject": [
+              0.12,
+              -0.015
+            ],
+            "margin": 0.95,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "frameTarget": "composition"
+          }
+        },
+        {
+          "id": "front",
+          "label": {
+            "de": "Korpus",
+            "en": "Body"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.1,
+            "fov": 24,
+            "roll": 0,
+            "subject": [
+              0,
+              -0.015
+            ],
+            "margin": 1.04,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "focusMm": {
+              "min": [
+                -35,
+                28,
+                -38
+              ],
+              "max": [
+                35,
+                168,
+                38
+              ]
+            },
+            "frameTarget": "primary"
+          }
+        },
+        {
+          "id": "profile",
+          "label": {
+            "de": "Dreiviertel",
+            "en": "Three-quarter"
+          },
+          "camera": {
+            "azimuth": -42,
+            "elevation": 0.2,
+            "fov": 26,
+            "roll": -15,
+            "subject": [
+              -0.04,
+              -0.015
+            ],
+            "margin": 1.02,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "frameTarget": "composition"
+          }
+        },
+        {
+          "id": "branding",
+          "label": {
+            "de": "Logo",
+            "en": "Logo"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.04,
+            "fov": 24,
+            "roll": 0,
+            "subject": [
+              0,
+              -0.02
+            ],
+            "margin": 1.01,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "focusMm": {
+              "min": [
+                -35,
+                30,
+                -38
+              ],
+              "max": [
+                35,
+                126,
+                38
+              ]
+            },
+            "frameTarget": "primary"
+          }
+        }
+      ]
+    },
+    "open": {
+      "defaultView": "overview",
+      "views": [
+        {
+          "id": "overview",
+          "label": {
+            "de": "Hero",
+            "en": "Hero"
+          },
+          "camera": {
+            "azimuth": -18,
+            "elevation": 0.32,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0.04,
+              -0.02
+            ],
+            "margin": 0.94,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "frameTarget": "composition"
+          }
+        },
+        {
+          "id": "front",
+          "label": {
+            "de": "Korpus",
+            "en": "Body"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.1,
+            "fov": 24,
+            "roll": 0,
+            "subject": [
+              0,
+              -0.015
+            ],
+            "margin": 1.04,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "focusMm": {
+              "min": [
+                -35,
+                28,
+                -38
+              ],
+              "max": [
+                35,
+                168,
+                38
+              ]
+            },
+            "frameTarget": "primary"
+          }
+        },
+        {
+          "id": "top",
+          "label": {
+            "de": "Von oben",
+            "en": "Top"
+          },
+          "camera": {
+            "azimuth": -12,
+            "elevation": 1.1,
+            "fov": 26,
+            "roll": -12,
+            "subject": [
+              0.02,
+              -0.02
+            ],
+            "margin": 0.98,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "frameTarget": "composition"
+          }
+        },
+        {
+          "id": "branding",
+          "label": {
+            "de": "Logo",
+            "en": "Logo"
+          },
+          "camera": {
+            "azimuth": -12,
+            "elevation": 0.04,
+            "fov": 24,
+            "roll": 3,
+            "subject": [
+              0,
+              -0.02
+            ],
+            "margin": 1.01,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "focusMm": {
+              "min": [
+                -35,
+                30,
+                -38
+              ],
+              "max": [
+                35,
+                126,
+                38
+              ]
+            },
+            "frameTarget": "primary"
+          }
+        }
+      ]
+    },
+    "lying": {
+      "defaultView": "overview",
+      "views": [
+        {
+          "id": "overview",
+          "label": {
+            "de": "Hero",
+            "en": "Hero"
+          },
+          "camera": {
+            "azimuth": -25,
+            "elevation": 0.28,
+            "fov": 30,
+            "roll": -25,
+            "subject": [
+              0.02,
+              -0.02
+            ],
+            "margin": 0.93,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "frameTarget": "composition"
+          }
+        },
+        {
+          "id": "profile",
+          "label": {
+            "de": "Dreiviertel",
+            "en": "Three-quarter"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.18,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0,
+              -0.015
+            ],
+            "margin": 1.02,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "focusMm": {
+              "min": [
+                18,
+                8,
+                -38
+              ],
+              "max": [
+                150,
+                67,
+                38
+              ]
+            },
+            "frameTarget": "primary"
+          }
+        },
+        {
+          "id": "top",
+          "label": {
+            "de": "Von oben",
+            "en": "Top"
+          },
+          "camera": {
+            "azimuth": 12,
+            "elevation": 1.35,
+            "fov": 26,
+            "roll": 28,
+            "subject": [
+              0.02,
+              -0.02
+            ],
+            "margin": 0.98,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "frameTarget": "composition"
+          }
+        },
+        {
+          "id": "branding",
+          "label": {
+            "de": "Logo",
+            "en": "Logo"
+          },
+          "camera": {
+            "azimuth": -8,
+            "elevation": 0.1,
+            "fov": 24,
+            "roll": -90,
+            "subject": [
+              0,
+              -0.02
+            ],
+            "margin": 1.01,
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1,
+            "focusMm": {
+              "min": [
+                30,
+                8,
+                -38
+              ],
+              "max": [
+                122,
+                67,
+                38
+              ]
+            },
+            "frameTarget": "primary"
+          }
+        }
+      ]
+    }
+  },
+  "lidStates": {
+    "closed": {
+      "defaultView": "overview",
+      "views": [
+        {
+          "id": "overview",
+          "label": {
+            "de": "Hero",
+            "en": "Hero"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 1,
+            "fov": 26,
+            "roll": -2,
+            "subject": [
+              0.12,
+              -0.015
+            ],
+            "margin": 1.01,
+            "frameTarget": "composition",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        },
+        {
+          "id": "top",
+          "label": {
+            "de": "Detail",
+            "en": "Detail"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.65,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0,
+              0
+            ],
+            "margin": 1.08,
+            "focusMm": {
+              "min": [
+                -35,
+                120,
+                -35
+              ],
+              "max": [
+                35,
+                213,
+                35
+              ]
+            },
+            "frameTarget": "primary",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        },
+        {
+          "id": "branding",
+          "label": {
+            "de": "Logo",
+            "en": "Logo"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.65,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0,
+              0
+            ],
+            "margin": 1.06,
+            "focusMm": {
+              "min": [
+                -29,
+                177,
+                -29
+              ],
+              "max": [
+                29,
+                213,
+                29
+              ]
+            },
+            "frameTarget": "primary",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        }
+      ]
+    },
+    "open": {
+      "defaultView": "overview",
+      "views": [
+        {
+          "id": "overview",
+          "label": {
+            "de": "Hero",
+            "en": "Hero"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.5,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0.04,
+              -0.02
+            ],
+            "margin": 1.01,
+            "frameTarget": "composition",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        },
+        {
+          "id": "top",
+          "label": {
+            "de": "Detail",
+            "en": "Detail"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.65,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0,
+              0
+            ],
+            "margin": 1.08,
+            "focusMm": {
+              "min": [
+                10,
+                -1,
+                -30
+              ],
+              "max": [
+                104,
+                88,
+                42
+              ]
+            },
+            "frameTarget": "primary",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        },
+        {
+          "id": "branding",
+          "label": {
+            "de": "Logo",
+            "en": "Logo"
+          },
+          "camera": {
+            "azimuth": 0,
+            "elevation": 0.65,
+            "fov": 26,
+            "roll": 0,
+            "subject": [
+              0.14,
+              -0.015
+            ],
+            "margin": 1.06,
+            "focusMm": {
+              "min": [
+                43,
+                -1,
+                -17
+              ],
+              "max": [
+                102,
+                51,
+                41
+              ]
+            },
+            "frameTarget": "primary",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        }
+      ]
+    },
+    "lying": {
+      "defaultView": "overview",
+      "views": [
+        {
+          "id": "overview",
+          "label": {
+            "de": "Hero",
+            "en": "Hero"
+          },
+          "camera": {
+            "azimuth": 50,
+            "elevation": 0.5,
+            "fov": 30,
+            "roll": -25,
+            "subject": [
+              0.02,
+              -0.02
+            ],
+            "margin": 1.01,
+            "frameTarget": "composition",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        },
+        {
+          "id": "top",
+          "label": {
+            "de": "Detail",
+            "en": "Detail"
+          },
+          "camera": {
+            "azimuth": 35,
+            "elevation": 0.65,
+            "fov": 26,
+            "roll": -90,
+            "subject": [
+              0,
+              0
+            ],
+            "margin": 1.08,
+            "focusMm": {
+              "min": [
+                120,
+                4,
+                -33
+              ],
+              "max": [
+                214,
+                69,
+                33
+              ]
+            },
+            "frameTarget": "primary",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        },
+        {
+          "id": "branding",
+          "label": {
+            "de": "Logo",
+            "en": "Logo"
+          },
+          "camera": {
+            "azimuth": 35,
+            "elevation": 0.35,
+            "fov": 26,
+            "roll": -90,
+            "subject": [
+              0,
+              0
+            ],
+            "margin": 1.06,
+            "focusMm": {
+              "min": [
+                160,
+                6,
+                -25
+              ],
+              "max": [
+                211,
+                64,
+                25
+              ]
+            },
+            "frameTarget": "primary",
+            "near": 0.025,
+            "far": 100,
+            "zoom": 1
+          }
+        }
+      ]
+    }
+  }
+}

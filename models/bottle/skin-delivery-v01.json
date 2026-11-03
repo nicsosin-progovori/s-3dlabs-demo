@@ -1,0 +1,538 @@
+{
+  "schemaVersion": 1,
+  "compatibility": {
+    "modelId": "bottle",
+    "uvLayout": "bottle-uv-v01",
+    "materialBindings": "bottle-materials-v01"
+  },
+  "originals": [
+    {
+      "file": "public/models/bottle/bottle-low-v01.glb",
+      "sha256": "467a8b87ff21a13b1dcfd050fa4badb789d2cb28cbc91ddd44d4288635c55b3a",
+      "bytes": 191392
+    },
+    {
+      "file": "public/models/bottle/bottle-hq-v01.glb",
+      "sha256": "0baee6d5b067e63ecbc7849b9af3358fca85ab58c5980efac4fa3f42caaab8fd",
+      "bytes": 1340356
+    }
+  ],
+  "geometry": {
+    "low": {
+      "file": "models/bottle/bottle-geometry-low-v01.glb",
+      "sha256": "528b4e48f976240c5c3d5e8e33dc8b8c832dc02766b28577b354c812d4b8f909",
+      "bytes": 157476,
+      "triangles": 6082
+    },
+    "final": {
+      "file": "models/bottle/bottle-geometry-final-v01.glb",
+      "sha256": "81fc7b5299433f03a546967a375cb88b94d40158b01fc0820c6c38efe67b1556",
+      "bytes": 506284,
+      "triangles": 21980
+    }
+  },
+  "skins": [
+    {
+      "id": "bottle-black",
+      "revision": "v01",
+      "label": {
+        "de": "Schwarz",
+        "en": "Black"
+      },
+      "file": "skins/bottle/bottle-black/v01/skin.json",
+      "sha256": "609635551ed98df2c23abbfb1461fa8e2feb4e3c4aa4b076f41eb8a25a232429",
+      "bytes": 6699
+    },
+    {
+      "id": "bottle-blue",
+      "revision": "v01",
+      "label": {
+        "de": "Blau",
+        "en": "Blue"
+      },
+      "file": "skins/bottle/bottle-blue/v01/skin.json",
+      "sha256": "13b2c5dc13b3909d833632c04c046d2decb2d546825a2c1a07ee2b2902318322",
+      "bytes": 6696
+    },
+    {
+      "id": "bottle-red",
+      "revision": "v01",
+      "label": {
+        "de": "Rot",
+        "en": "Red"
+      },
+      "file": "skins/bottle/bottle-red/v01/skin.json",
+      "sha256": "8d348637b83e945ff2259ae94bf2d983ab57da7ec247910ebffe756e12d5b0fa",
+      "bytes": 6694
+    },
+    {
+      "id": "bottle-white",
+      "revision": "v01",
+      "label": {
+        "de": "Weiß",
+        "en": "White"
+      },
+      "file": "skins/bottle/bottle-white/v01/skin.json",
+      "sha256": "77329edc2fa9498c1b931d9fc108acb2814b0b9879f040fc4bd709693748882a",
+      "bytes": 6709
+    },
+    {
+      "id": "bottle-green",
+      "revision": "v01",
+      "label": {
+        "de": "Grün",
+        "en": "Green"
+      },
+      "file": "skins/bottle/bottle-green/v01/skin.json",
+      "sha256": "38d80b9b21ba2382b24dfb576be00ce495007d1bbb1263a475ab7adc543d70d2",
+      "bytes": 6697
+    },
+    {
+      "id": "bottle-orange",
+      "revision": "v01",
+      "label": {
+        "de": "Orange",
+        "en": "Orange"
+      },
+      "file": "skins/bottle/bottle-orange/v01/skin.json",
+      "sha256": "54e5a2e61944a1da878f1e7b6db6fe6ffd7a51f906709ec52b7ba98285b2cf0a",
+      "bytes": 6697
+    },
+    {
+      "id": "bottle-turquoise",
+      "revision": "v01",
+      "label": {
+        "de": "Türkis",
+        "en": "Turquoise"
+      },
+      "file": "skins/bottle/bottle-turquoise/v01/skin.json",
+      "sha256": "05edfbec99b068b05b2b31de8d445576a8b9c417b2faf993c4982683735110bb",
+      "bytes": 6699
+    },
+    {
+      "id": "bottle-silver",
+      "revision": "v01",
+      "label": {
+        "de": "Mattsilber",
+        "en": "Matt silver"
+      },
+      "file": "skins/bottle/bottle-silver/v01/skin.json",
+      "sha256": "d57c5628e6109d2bf17a97628827c54179737bb1b793fe9fc0985916fe124aba",
+      "bytes": 6715
+    },
+    {
+      "id": "bottle-navy",
+      "revision": "v01",
+      "label": {
+        "de": "Marineblau",
+        "en": "Navy"
+      },
+      "file": "skins/bottle/bottle-navy/v01/skin.json",
+      "sha256": "d2b72a095e34b287075d99adc5d85b49ef183a6c23e6b667b722a48bc632bade",
+      "bytes": 6696
+    }
+  ],
+  "profiles": {
+    "low": {
+      "images": [
+        {
+          "name": "BrushedSteelNormal",
+          "file": "textures/bc515e9027f364a77dcfe49da9fa28b3bd75135519a83f1c56a491d5f8c676e5.png",
+          "sha256": "bc515e9027f364a77dcfe49da9fa28b3bd75135519a83f1c56a491d5f8c676e5",
+          "bytes": 1722,
+          "width": 64,
+          "height": 32,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "BrushedSteelRoughness",
+          "file": "textures/8904b444c69c6ce751434fb5ca83387decc480a02e81794ed4cfe357092017ba.png",
+          "sha256": "8904b444c69c6ce751434fb5ca83387decc480a02e81794ed4cfe357092017ba",
+          "bytes": 597,
+          "width": 64,
+          "height": 32,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "BambooFibresNormal",
+          "file": "textures/c5dde1ebf73db6744d612af60acb1417cc21fbe563e796654506dba8e10a0736.png",
+          "sha256": "c5dde1ebf73db6744d612af60acb1417cc21fbe563e796654506dba8e10a0736",
+          "bytes": 3254,
+          "width": 64,
+          "height": 64,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "NaturalBambooColour",
+          "file": "textures/a2da1b4b6dc4cabd443cb0511ab2a0aa60bd38073ee58da1aabb509c5e10fdb7.png",
+          "sha256": "a2da1b4b6dc4cabd443cb0511ab2a0aa60bd38073ee58da1aabb509c5e10fdb7",
+          "bytes": 15129,
+          "width": 128,
+          "height": 128,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "BambooFibresRoughness",
+          "file": "textures/b69b09fb57f7ab1d6feeb44dbd0ad5d02e79075b6b4474ba41c9130b73c1fd36.png",
+          "sha256": "b69b09fb57f7ab1d6feeb44dbd0ad5d02e79075b6b4474ba41c9130b73c1fd36",
+          "bytes": 1298,
+          "width": 64,
+          "height": 64,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "PowderCoatNormal",
+          "file": "textures/6bee5c8866dd568853916d3d04e3a7c5c9b4167a2790fcd1d549e08ac914e0e5.png",
+          "sha256": "6bee5c8866dd568853916d3d04e3a7c5c9b4167a2790fcd1d549e08ac914e0e5",
+          "bytes": 6746,
+          "width": 64,
+          "height": 64,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "PowderCoatRoughness",
+          "file": "textures/0c1a21ace4b03f7dcc75b337e1bffd42778cf1d51261484b3f41c0ccbe495c62.png",
+          "sha256": "0c1a21ace4b03f7dcc75b337e1bffd42778cf1d51261484b3f41c0ccbe495c62",
+          "bytes": 3241,
+          "width": 64,
+          "height": 64,
+          "mimeType": "image/png"
+        }
+      ],
+      "textures": [
+        {
+          "sampler": 0,
+          "source": 0
+        },
+        {
+          "sampler": 0,
+          "source": 1
+        },
+        {
+          "sampler": 0,
+          "source": 2
+        },
+        {
+          "sampler": 0,
+          "source": 3
+        },
+        {
+          "sampler": 0,
+          "source": 4
+        },
+        {
+          "sampler": 0,
+          "source": 5
+        },
+        {
+          "sampler": 0,
+          "source": 6
+        }
+      ],
+      "samplers": [
+        {
+          "magFilter": 9729,
+          "minFilter": 9987
+        }
+      ]
+    },
+    "final": {
+      "images": [
+        {
+          "name": "BrushedSteelNormal",
+          "file": "textures/a1ac223a63b4a1dd42c49ae452313c44c469daa0db8ed1b4231765fa41b84264.png",
+          "sha256": "a1ac223a63b4a1dd42c49ae452313c44c469daa0db8ed1b4231765fa41b84264",
+          "bytes": 88870,
+          "width": 512,
+          "height": 256,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "BrushedSteelRoughness",
+          "file": "textures/97a4177b737cb196ddec513ed74be2d06cd4f5dc5d9473cab37fe5ffbd8f1877.png",
+          "sha256": "97a4177b737cb196ddec513ed74be2d06cd4f5dc5d9473cab37fe5ffbd8f1877",
+          "bytes": 25071,
+          "width": 512,
+          "height": 256,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "BambooFibresNormal",
+          "file": "textures/77597c5feccac588bb99952520027d4e7096898a8b6739c054c11ce794a2b754.png",
+          "sha256": "77597c5feccac588bb99952520027d4e7096898a8b6739c054c11ce794a2b754",
+          "bytes": 99655,
+          "width": 512,
+          "height": 512,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "NaturalBambooColour",
+          "file": "textures/11bee5f69625060f5274e771f9339154ef377f1d5f3afc8466babf7d8e528903.png",
+          "sha256": "11bee5f69625060f5274e771f9339154ef377f1d5f3afc8466babf7d8e528903",
+          "bytes": 155539,
+          "width": 512,
+          "height": 512,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "BambooFibresRoughness",
+          "file": "textures/7d7e1a193dab3601cfd1523852223364981c865328db20435b63285306ec30c8.png",
+          "sha256": "7d7e1a193dab3601cfd1523852223364981c865328db20435b63285306ec30c8",
+          "bytes": 21092,
+          "width": 512,
+          "height": 512,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "PowderCoatNormal",
+          "file": "textures/6531ff127d1aebe34a9af4f590ec3bf6847659799c0e3bd9de7f6f7a4d6631eb.png",
+          "sha256": "6531ff127d1aebe34a9af4f590ec3bf6847659799c0e3bd9de7f6f7a4d6631eb",
+          "bytes": 263549,
+          "width": 512,
+          "height": 512,
+          "mimeType": "image/png"
+        },
+        {
+          "name": "PowderCoatRoughness",
+          "file": "textures/4b3e50413c4c5178a85e58e94dee8b5b79407e5e58deabe83bef4ec81253a8cc.png",
+          "sha256": "4b3e50413c4c5178a85e58e94dee8b5b79407e5e58deabe83bef4ec81253a8cc",
+          "bytes": 178355,
+          "width": 512,
+          "height": 512,
+          "mimeType": "image/png"
+        }
+      ],
+      "textures": [
+        {
+          "sampler": 0,
+          "source": 0
+        },
+        {
+          "sampler": 0,
+          "source": 1
+        },
+        {
+          "sampler": 0,
+          "source": 2
+        },
+        {
+          "sampler": 0,
+          "source": 3
+        },
+        {
+          "sampler": 0,
+          "source": 4
+        },
+        {
+          "sampler": 0,
+          "source": 5
+        },
+        {
+          "sampler": 0,
+          "source": 6
+        }
+      ],
+      "samplers": [
+        {
+          "magFilter": 9729,
+          "minFilter": 9987
+        }
+      ]
+    }
+  },
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "SoftBlackABS.001",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.012000000104308128,
+          0.014000000432133675,
+          0.01600000075995922,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.6100000143051147
+      },
+      "extras": {
+        "materialSlotId": "body.plastic"
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "TransparentDecoration.001",
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "roughnessFactor": 0.5
+      },
+      "extras": {
+        "materialSlotId": "decoration"
+      }
+    },
+    {
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_anisotropy": {
+          "anisotropyStrength": 0.6499999761581421,
+          "anisotropyRotation": 1.5707963267948966
+        }
+      },
+      "name": "BrushedStainlessSteel.001",
+      "normalTexture": {
+        "extensions": {
+          "KHR_texture_transform": {
+            "offset": [
+              0,
+              -7
+            ],
+            "scale": [
+              2,
+              8
+            ]
+          }
+        },
+        "index": 0,
+        "scale": 0.18000000715255737
+      },
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6399999856948853,
+          0.6600000262260437,
+          0.6800000071525574,
+          1
+        ],
+        "metallicRoughnessTexture": {
+          "extensions": {
+            "KHR_texture_transform": {
+              "offset": [
+                0,
+                -7
+              ],
+              "scale": [
+                2,
+                8
+              ]
+            }
+          },
+          "index": 1
+        }
+      },
+      "extras": {
+        "materialSlotId": "steel.brushed"
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "PolishedHandleSteel",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6800000071525574,
+          0.699999988079071,
+          0.7200000286102295,
+          1
+        ],
+        "roughnessFactor": 0.23000000417232513
+      },
+      "extras": {
+        "materialSlotId": "steel.handle"
+      }
+    },
+    {
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_clearcoat": {
+          "clearcoatFactor": 0.04500000178813934,
+          "clearcoatRoughnessFactor": 0.5
+        }
+      },
+      "name": "NaturalBamboo",
+      "normalTexture": {
+        "index": 2,
+        "scale": 0.3499999940395355
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicFactor": 0,
+        "metallicRoughnessTexture": {
+          "index": 4
+        }
+      },
+      "extras": {
+        "materialSlotId": "lid.bamboo"
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "Silicone.001",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.012000000104308128,
+          0.014000000432133675,
+          0.01600000075995922,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.7799999713897705
+      },
+      "extras": {
+        "materialSlotId": "lid.seal"
+      }
+    },
+    {
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_clearcoat": {
+          "clearcoatFactor": 0.03500000014901161,
+          "clearcoatRoughnessFactor": 0.3799999952316284
+        }
+      },
+      "name": "BottleCoating",
+      "normalTexture": {
+        "extensions": {
+          "KHR_texture_transform": {
+            "offset": [
+              0,
+              -1
+            ],
+            "scale": [
+              2,
+              2
+            ]
+          }
+        },
+        "index": 5,
+        "scale": 0.2800000011920929
+      },
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.012000000104308128,
+          0.017000000923871994,
+          0.019999999552965164,
+          1
+        ],
+        "metallicFactor": 0,
+        "metallicRoughnessTexture": {
+          "extensions": {
+            "KHR_texture_transform": {
+              "offset": [
+                0,
+                -1
+              ],
+              "scale": [
+                2,
+                2
+              ]
+            }
+          },
+          "index": 6
+        }
+      },
+      "extras": {
+        "materialSlotId": "body.coating"
+      }
+    }
+  ],
+  "geometryBuffersCopiedWithoutReencoding": true
+}

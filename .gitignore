@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.cache/
+test-results/
+playwright-report/
+.DS_Store
+__pycache__/
+*.py[cod]
+*.log
+*.blend1
+*.blend2
+*.blend
+# Local credentials and operator state never belong in source checkpoints.
+.local/
+.local-verify/
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example

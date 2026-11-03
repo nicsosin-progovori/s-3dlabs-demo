@@ -1,0 +1,24 @@
+{
+  "glbSha256": "232db04e09b14906080975c2b3664bd19654dfdd91afa2b76dd6f81cd22a230a",
+  "bytes": 588580,
+  "units": "metres",
+  "states": {
+    "ready": {
+      "boundsMmBlenderXYZ": {
+        "min": [
+          -125.0,
+          -139.5,
+          -0.171
+        ],
+        "max": [
+          125.0,
+          132.421,
+          109.171
+        ]
+      },
+      "triangles": 22000
+    }
+  },
+  "derivation": "SOURCE MO3154 photographs; body 220 x 220 x 109 mm, two-tone polyester, PU straps and control panel; secondary details reconstructed. Embroidery is an owner-requested additional mockup technique, absent from current SOURCE listing.",
+  "canonicalFrame": "glTF Y-up, front +Z, floor Y=0; embedded textures"
+}

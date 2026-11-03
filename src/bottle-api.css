@@ -1,0 +1,103 @@
+@import url('./styles.css');
+
+.bottle-page-body{min-width:0}
+.bottle-api-page{min-height:100dvh;background:#f8f7f4;color:#28302c;font-family:Arial,Helvetica,sans-serif}
+.bottle-api-page *{box-sizing:border-box}
+.bottle-api-page button{font:inherit;cursor:pointer;transition:background .16s,border-color .16s,color .16s}
+.bottle-api-page button:focus-visible,.bottle-api-page a:focus-visible{outline:3px solid #ed6947;outline-offset:4px}
+.bottle-api-page button:disabled{cursor:wait;opacity:.55}
+.bottle-page-header{height:94px;max-width:1500px;margin:auto;padding:0 52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #deded6}
+.bottle-brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none}
+.bottle-brand-mark{width:36px;height:36px;display:grid;place-items:center;border:1px solid #d5d8ce;border-radius:11px;background:#fff}
+.bottle-brand strong{font-size:34px;letter-spacing:-2px}.bottle-brand strong span{color:#ed6947}
+.bottle-brand i{height:23px;width:1px;background:#bec4b7;margin:0 3px}.bottle-brand-name{font-size:16px;letter-spacing:3px;font-weight:700}
+.bottle-page-edition{font-size:10px;letter-spacing:2.6px;color:#7a8175}
+.bottle-page-main{max-width:1500px;padding:40px 52px 30px;margin:auto}
+.bottle-page-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:27px;gap:20px}
+.bottle-eyebrow{font-size:11px;font-weight:600;letter-spacing:2px;color:#737d6e;margin:0 0 11px}
+.bottle-page-heading h1{font-weight:500;font-size:clamp(25px,2.65vw,38px);line-height:1.15;letter-spacing:-1.15px;margin:0}
+.bottle-object-name{text-align:right;line-height:1.6;font-size:14px}.bottle-object-name small{font-size:11px;color:#7a8175}
+.bottle-page-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:26px;align-items:stretch}
+.bottle-image-card{border:1px solid #d8d9d0;border-radius:22px;overflow:hidden;background:#eeebe5;min-width:0;display:flex;flex-direction:column}
+.bottle-visualisation{height:clamp(400px,calc(100dvh - 310px),700px);min-height:340px;width:100%;flex:1;background:var(--studio-background);position:relative;overflow:hidden;isolation:isolate}
+.bottle-visualisation canvas{display:block;opacity:0;transition:opacity .18s}.bottle-visualisation canvas[data-studio-visible="true"]{opacity:1}
+.bottle-orbit-hint{display:flex;justify-content:center;align-items:center;gap:8px;margin:0;padding:16px 12px;border-top:1px solid #d8d9d0;background:#f2f0eb;font-size:11px;line-height:1.5;color:#747c6c}.bottle-orbit-hint span{color:#b4baad}
+.bottle-control-panel{background:#fff;border:1px solid #dcded4;border-radius:22px;padding:26px;min-width:0;display:flex;flex-direction:column}
+.bottle-panel-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px;font-weight:600;padding-bottom:24px;border-bottom:1px solid #e8e9e2}.bottle-panel-index{font-size:10px;letter-spacing:1px;color:#9b9f94;font-weight:400}
+.bottle-control-section{padding:25px 0;border-bottom:1px solid #e8e9e2}
+.bottle-control-panel h2{font-size:14px;margin:0 0 15px;display:flex;gap:12px;align-items:center;font-weight:600}.bottle-control-panel h2>span{font-size:10px;letter-spacing:1px;color:#99a18f;font-weight:400}
+.bottle-states{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bottle-cameras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bottle-states button,.bottle-cameras button{min-height:49px;padding:10px 5px;background:#f8f9f5;border:1px solid #d9dece;border-radius:11px;font-size:12px;color:#626e55;line-height:1.25}
+.bottle-cameras button{min-height:51px;font-size:13px}
+.bottle-states button[aria-pressed="true"],.bottle-cameras button[aria-pressed="true"]{border-color:#ed987d;background:#fff3ed;color:#a95339;box-shadow:0 0 0 1px #ed987d inset}
+.bottle-states button:hover:not(:disabled),.bottle-cameras button:hover:not(:disabled){border-color:#a6af99;background:#f1f4e9}
+.bottle-export-section{padding-top:26px;margin-top:auto}.bottle-export-section p{font-size:11px;color:#818879;margin:0 0 18px}
+.bottle-download{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#ef653e;border:1px solid #ed5e36;color:white;width:100%;min-height:56px;padding:16px;border-radius:12px;font-size:13px;font-weight:600}.bottle-download:hover:not(:disabled){background:#df5630}
+.bottle-status{font-size:11px;line-height:1.5;color:#8a9280;min-height:33px;margin:17px 0 0}.bottle-status.is-error{color:#a44932}
+.bottle-view-status{font-size:11px;line-height:1.5;color:#8a9280;margin:10px 0 0}.bottle-view-status.is-error{color:#a44932}
+.bottle-cameras button{overflow-wrap:anywhere}
+.bottle-page-footer{max-width:1500px;margin:auto;padding:0 52px 24px;display:flex;justify-content:space-between;gap:20px;font-size:9px;letter-spacing:1.1px;color:#959c8c}
+@media(min-width:1500px){.bottle-page-header{border-bottom:0}}
+@media(max-width:1000px){.bottle-page-header{padding:0 28px}.bottle-page-main{padding:30px 28px 24px}.bottle-page-layout{grid-template-columns:minmax(0,1fr) 290px;gap:18px}.bottle-control-panel{padding:22px}.bottle-page-footer{padding-inline:28px}.bottle-object-name{display:none}.bottle-states{grid-template-columns:1fr}.bottle-states button{min-height:42px}.bottle-control-section{padding:18px 0}}
+@media(max-width:720px){.bottle-page-header{height:75px;padding:0 20px}.bottle-page-edition{display:none}.bottle-page-main{padding:28px 20px 20px}.bottle-page-heading{margin-bottom:22px}.bottle-page-heading h1{font-size:28px;letter-spacing:-.8px;max-width:310px}.bottle-eyebrow{font-size:10px}.bottle-page-layout{grid-template-columns:1fr;gap:18px}.bottle-visualisation{height:420px;min-height:300px}.bottle-image-card,.bottle-control-panel{border-radius:18px}.bottle-control-panel{padding:23px}.bottle-panel-title{padding-bottom:20px}.bottle-states{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.bottle-states button{min-height:50px}.bottle-cameras{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.bottle-cameras button{font-size:11px;min-height:48px}.bottle-page-footer{padding:0 20px 24px;font-size:8px;letter-spacing:.6px}.bottle-orbit-hint{font-size:10px}.bottle-control-section{padding:24px 0}}
+@media(max-width:370px){.bottle-visualisation{height:340px}.bottle-page-heading h1{font-size:26px}.bottle-control-panel{padding:18px}.bottle-cameras{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.bottle-api-page *{transition:none!important}}
+
+/* Product controls remain outside the independent 3D surface. */
+.bottle-header-tools{display:flex;align-items:center;gap:24px}
+.bottle-language{display:flex;gap:3px;padding:3px;border:1px solid #d7dccf;border-radius:10px;background:#f0f2eb}
+.bottle-language button{border:0;border-radius:7px;padding:7px 9px;background:transparent;color:#7d8774;font-size:10px;font-weight:600;letter-spacing:.5px}
+.bottle-language button[aria-pressed="true"]{background:#fff;color:#28302c;box-shadow:0 1px 3px #34442815}
+.bottle-page-layout{grid-template-columns:minmax(0,1fr) 355px;gap:24px;align-items:stretch}
+.bottle-image-card{height:auto;min-height:500px;contain:size}
+.bottle-control-panel{height:auto;min-height:0}
+.bottle-visualisation{height:auto;min-height:300px}
+.bottle-control-panel{padding:24px;overflow:visible}
+.bottle-panel-title{padding-bottom:20px;flex-shrink:0}
+.bottle-control-sections{min-width:0}
+.bottle-control-section{padding:20px 0}
+.bottle-control-section:last-child{border-bottom:0}
+.bottle-control-panel h2{margin-bottom:12px;font-size:13px;gap:8px}
+.bottle-control-panel h2>span{width:16px;flex:0 0 16px;font-size:9px}
+.bottle-states{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bottle-states button{min-height:44px;font-size:11px}
+.bottle-colour-name{margin-left:auto;color:#7e8874;font-weight:400;font-size:11px}
+.bottle-colours{display:flex;gap:9px;flex-wrap:wrap;padding:3px}
+.bottle-colours button{border:1px solid #20301526;box-shadow:inset 0 0 1px #fff8;width:23px;height:23px;padding:0;border-radius:50%;display:grid;place-items:center;color:white;position:relative}
+.bottle-colours button[aria-label="Weiß"],.bottle-colours button[aria-label="White"],.bottle-colours button[aria-label="Silber"],.bottle-colours button[aria-label="Silver"]{color:#44503b}
+.bottle-colours button[aria-pressed="true"]{outline:2px solid #ed7954;outline-offset:3px}
+.bottle-colours button:hover:not(:disabled){outline:2px solid #9fa995;outline-offset:3px}
+.bottle-file-input{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+.bottle-logo-picker{position:relative}
+.bottle-logo-upload{display:block;width:100%;padding:8px 10px;border:1px dashed #cbd2c2;border-radius:11px;background:#f8f9f5;color:#6d7b60;text-align:center}
+.bottle-logo-upload:hover:not(:disabled),.is-dragging .bottle-logo-upload{border-color:#ed987d;background:#fff3ed}
+.bottle-logo-upload canvas{width:100%;height:60px;object-fit:contain;display:block}
+.bottle-logo-upload>span:last-child{display:block;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding-top:5px}
+.bottle-logo-empty{height:60px;display:flex!important;align-items:center;justify-content:center;gap:8px;font-size:11px}
+.bottle-logo-actions{display:flex;align-items:start;justify-content:space-between;gap:6px;margin-top:9px}
+.bottle-logo-actions>span{font-size:8px;line-height:1.6;color:#929a87;max-width:150px}
+.bottle-logo-actions button{border:0;padding:0;background:none;color:#8b6956;text-decoration:underline;text-underline-offset:2px;font-size:9px;text-align:right}
+.bottle-placement{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.bottle-placement button{border:1px solid #d9dece;border-radius:9px;min-height:44px;background:#f8f9f5;color:#626e55;font-size:11px}
+.bottle-placement button[aria-pressed="true"]{border-color:#ed987d;background:#fff3ed;color:#a95339;box-shadow:0 0 0 1px #ed987d inset}
+.bottle-field{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:8px;font-size:11px;color:#6d7960}
+.bottle-field>span{flex-shrink:0}
+.bottle-field select{font:inherit;min-width:0;flex:1;width:100%;padding:9px 24px 9px 9px;border:1px solid #d9dece;border-radius:8px;color:#43503a;background:#f8f9f5;cursor:pointer}
+.bottle-field select:focus-visible{outline:2px solid #ed6947;outline-offset:2px}
+.bottle-method-description,.bottle-print-area{font-size:10px;color:#858e7c;line-height:1.5;margin:9px 0 0}
+.bottle-print-area{font-size:9px;color:#a0a891;margin-top:5px}
+.bottle-ink-count{margin-top:12px}.bottle-ink-count select{max-width:none;margin-left:0}
+.bottle-cameras{gap:8px}.bottle-cameras button{min-height:44px;font-size:11px}
+.bottle-views-section{border-bottom:1px solid #e8e9e2}
+.bottle-export-section{flex-shrink:0;margin-top:0;padding:20px 0 0;border-top:1px solid #e8e9e2;background:#fff}
+.bottle-export-section h2{margin-bottom:7px}.bottle-export-section>p:not(.bottle-status){margin-bottom:12px;font-size:10px}
+.bottle-download{min-height:51px;padding:14px;font-size:12px}
+.bottle-status{font-size:10px;min-height:15px;margin:9px 0 0;line-height:1.5}
+@media(max-width:1000px) and (min-width:721px){.bottle-page-layout{grid-template-columns:minmax(0,1fr) 310px}.bottle-control-panel{padding-inline:20px}.bottle-colours{gap:7px}.bottle-colours button{width:22px;height:22px}.bottle-header-tools{gap:14px}}
+@media(max-width:720px){.bottle-page-layout{grid-template-columns:1fr}.bottle-image-card{height:455px;min-height:0}.bottle-control-panel{height:auto;padding:24px}.bottle-visualisation{height:auto}.bottle-control-section{padding:24px 0}.bottle-states button{min-height:48px}.bottle-colours{gap:13px}.bottle-colours button{width:25px;height:25px}.bottle-control-panel h2{font-size:14px}.bottle-cameras button{min-height:46px}.bottle-logo-actions>span{font-size:9px;max-width:none}.bottle-logo-actions button{font-size:10px}.bottle-export-section{padding:24px 0 0}.bottle-status{min-height:30px}.bottle-language button{padding:7px}.bottle-header-tools{gap:0}}
+@media(max-width:370px){.bottle-control-panel{padding-inline:20px}.bottle-colours{gap:10px}.bottle-colours button{width:23px;height:23px}.bottle-image-card{height:385px}}
+
+@media(max-width:720px){.bottle-language button{min-width:35px;min-height:35px}.bottle-logo-actions button{min-height:30px;display:flex;align-items:center}.bottle-placement button{min-height:44px}}
+
+.bottle-logo-upload .bottle-logo-action{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;padding-top:5px;color:#667658}

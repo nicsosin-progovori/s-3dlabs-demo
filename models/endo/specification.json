@@ -1,0 +1,118 @@
+{
+  "id": "endo",
+  "label": {
+    "de": "Endo Tracker",
+    "en": "Endo tracker"
+  },
+  "code": "P330.90 · XD Collection",
+  "size": "42 × 27 × 8 mm",
+  "source": "https://www.source-werbeartikel.com/endo-gesundheitstracker-51-p330-90-c",
+  "assetUrl": "/models/endo/endo.glb",
+  "states": [
+    {
+      "id": "wrist",
+      "label": {
+        "de": "Am Handgelenk",
+        "en": "Wrist shape"
+      },
+      "elevation": 0.38,
+      "hoverMm": 14
+    },
+    {
+      "id": "flat",
+      "label": {
+        "de": "Ausgebreitet",
+        "en": "Laid out"
+      },
+      "elevation": 1.9
+    },
+    {
+      "id": "box-closed",
+      "label": {
+        "de": "Box geschlossen",
+        "en": "Box closed"
+      },
+      "elevation": 1.5
+    },
+    {
+      "id": "box-open",
+      "label": {
+        "de": "Box geöffnet",
+        "en": "Box open"
+      },
+      "elevation": 1.5
+    }
+  ],
+  "colors": [
+    {
+      "id": "black",
+      "hex": "#24272c",
+      "label": {
+        "de": "Schwarz",
+        "en": "Black"
+      },
+      "frame": "#343940"
+    },
+    {
+      "id": "grey",
+      "hex": "#92948f",
+      "label": {
+        "de": "Grau",
+        "en": "Grey"
+      },
+      "frame": "#a0a49e"
+    },
+    {
+      "id": "navy",
+      "hex": "#1e2c45",
+      "label": {
+        "de": "Navyblau",
+        "en": "Navy blue"
+      },
+      "frame": "#4e5664"
+    }
+  ],
+  "zones": [
+    {
+      "id": "front",
+      "label": {
+        "de": "Vordere Metallleiste",
+        "en": "Front metal bar"
+      },
+      "surface": "front",
+      "widthMm": 18,
+      "heightMm": 3,
+      "surfaceWidthMm": 18,
+      "surfaceHeightMm": 3,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "techniques": [
+        "laser"
+      ],
+      "azimuth": 25
+    },
+    {
+      "id": "pad-front",
+      "label": {
+        "de": "Vordere Leiste · Druck",
+        "en": "Front bar · print"
+      },
+      "surface": "front",
+      "widthMm": 17,
+      "heightMm": 3,
+      "surfaceWidthMm": 18,
+      "surfaceHeightMm": 3,
+      "center": [
+        0.5,
+        0.5
+      ],
+      "techniques": [
+        "pad"
+      ],
+      "azimuth": 25
+    }
+  ],
+  "defaultTechnique": "laser"
+}

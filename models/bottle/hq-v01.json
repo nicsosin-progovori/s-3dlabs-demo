@@ -1,0 +1,221 @@
+{
+  "sourceMaster": "/Users/nsosin/Projects/source-3d/models/bottle/prepared-v02.blend",
+  "sourceMasterSha256": "aa2ce9609345cfa92250473b8e6eb0a89043f731c615082ddf8a505c7e9624ec",
+  "referenceGlbSha256": "da4605b3ff36ed622262c9499ad21996b70a604f2fa3e6a19669eada895e6c3f",
+  "sourceFile": "prepared-hq-v01.blend",
+  "rawExport": ".cache/model-build/bottle-hq-v01.glb",
+  "triangles": 21980,
+  "meshes": [
+    {
+      "name": "BaseRim",
+      "before": 1152,
+      "after": 384
+    },
+    {
+      "name": "BottleBodyDecoration",
+      "before": 4608,
+      "after": 960
+    },
+    {
+      "name": "InternalSteelThread",
+      "before": 3840,
+      "after": 1920
+    },
+    {
+      "name": "BambooTopDecoration",
+      "before": 2,
+      "after": 2
+    },
+    {
+      "name": "CapThreadDetail",
+      "before": 2560,
+      "after": 1280
+    },
+    {
+      "name": "HandlePivotRivet",
+      "before": 528,
+      "after": 290
+    },
+    {
+      "name": "HandlePivotRivet.001",
+      "before": 528,
+      "after": 290
+    },
+    {
+      "name": "LidBambooTop",
+      "before": 3072,
+      "after": 1024
+    },
+    {
+      "name": "LidSiliconeSeal",
+      "before": 4608,
+      "after": 1024
+    },
+    {
+      "name": "LidSiliconeSeal.001",
+      "before": 4608,
+      "after": 1024
+    },
+    {
+      "name": "LidSteelCollar",
+      "before": 4992,
+      "after": 1536
+    },
+    {
+      "name": "LidThreadPlug",
+      "before": 3456,
+      "after": 1152
+    },
+    {
+      "name": "SteelCarryHandle",
+      "before": 1320,
+      "after": 726
+    },
+    {
+      "name": "SteelNeckAndInnerWall",
+      "before": 10752,
+      "after": 4608
+    },
+    {
+      "name": "VacuumBottleBody",
+      "before": 16512,
+      "after": 5760
+    }
+  ],
+  "maxTextureSize": 512,
+  "coatingTextureResolutionPreserved": true,
+  "glbSha256": "0baee6d5b067e63ecbc7849b9af3358fca85ab58c5980efac4fa3f42caaab8fd",
+  "bytes": 1340356,
+  "images": [
+    {
+      "name": "BrushedSteelNormal",
+      "width": 512,
+      "height": 256,
+      "beforeBytes": 153749,
+      "bytes": 88870,
+      "rms255": [
+        0.1786442199574863,
+        0.1384378527083543,
+        0.30159184604621275
+      ],
+      "maxChannelError255": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "BrushedSteelRoughness",
+      "width": 512,
+      "height": 256,
+      "beforeBytes": 53282,
+      "bytes": 25071,
+      "rms255": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxChannelError255": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BambooFibresNormal",
+      "width": 512,
+      "height": 512,
+      "beforeBytes": 225666,
+      "bytes": 99655,
+      "rms255": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxChannelError255": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "NaturalBambooColour",
+      "width": 512,
+      "height": 512,
+      "beforeBytes": 325232,
+      "bytes": 155539,
+      "rms255": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxChannelError255": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BambooFibresRoughness",
+      "width": 512,
+      "height": 512,
+      "beforeBytes": 58192,
+      "bytes": 21092,
+      "rms255": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxChannelError255": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "PowderCoatNormal",
+      "width": 512,
+      "height": 512,
+      "beforeBytes": 671167,
+      "bytes": 263549,
+      "rms255": [
+        1.6076129044295089,
+        1.2735168806738795,
+        0.4605483659327012
+      ],
+      "maxChannelError255": [
+        17,
+        13,
+        7
+      ]
+    },
+    {
+      "name": "PowderCoatRoughness",
+      "width": 512,
+      "height": 512,
+      "beforeBytes": 300437,
+      "bytes": 178355,
+      "rms255": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxChannelError255": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "imageFormat": "standard indexed PNG; no texture decoder extension",
+  "storedStates": [
+    "closed"
+  ],
+  "runtimeStates": [
+    "closed",
+    "open",
+    "lying"
+  ],
+  "units": "metres",
+  "canonicalFrame": "glTF Y-up, front +Z; authored pivots and UVs retained"
+}

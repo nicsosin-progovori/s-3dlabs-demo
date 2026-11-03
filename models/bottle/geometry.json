@@ -1,0 +1,55 @@
+{
+  "glbSha256": "da4605b3ff36ed622262c9499ad21996b70a604f2fa3e6a19669eada895e6c3f",
+  "bytes": 5816648,
+  "units": "metres",
+  "states": {
+    "closed": {
+      "boundsMmBlenderXYZ": {
+        "min": [
+          -35.0,
+          -35.0,
+          0.0
+        ],
+        "max": [
+          35.0,
+          35.0,
+          209.68
+        ]
+      },
+      "triangles": 57928
+    },
+    "open": {
+      "boundsMmBlenderXYZ": {
+        "min": [
+          -35.0,
+          -36.0,
+          0.0
+        ],
+        "max": [
+          98.979,
+          35.0,
+          187.0
+        ]
+      },
+      "triangles": 57928
+    },
+    "lying": {
+      "boundsMmBlenderXYZ": {
+        "min": [
+          -0.0,
+          -35.0,
+          -0.0
+        ],
+        "max": [
+          209.68,
+          35.0,
+          70.0
+        ]
+      },
+      "triangles": 57928
+    }
+  },
+  "sourceFile": "prepared-v02.blend",
+  "derivation": "MO9431 V02; catalogue dimensions retained; ImageGen-guided smooth profiles, rolled lip, threads, rivets, embedded powder-coat / brushed-steel / bamboo PBR; identical mesh buffers shared by the three pose nodes. Secondary dimensions remain a visual reconstruction.",
+  "canonicalFrame": "glTF Y-up, front +Z, floor Y=0; embedded textures"
+}

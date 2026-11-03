@@ -1,0 +1,13 @@
+import metadata from '../models/pillow/geometry-v02.json'
+import { sourceProduct } from './sourceCatalog'
+import type { Text } from './sourceCatalog'
+import type { PillowView } from './pillowViews'
+const text=(de:string,en:string):Text=>({de,en})
+export const PILLOW={...sourceProduct('pillow'),assetUrl:`${import.meta.env.BASE_URL}models/pillow/pillow-v02.glb?v=${metadata.glbSha256.slice(0,12)}`}
+export const PILLOW_METHODS=['embroidery','transfer','reflective','screen-transfer'] as const
+export type PillowMethod=typeof PILLOW_METHODS[number]
+export const PILLOW_VIEW_LABELS:Record<PillowView,Text>={overview:text('Hero','Hero'),top:text('Von oben','Top'),profile:text('Profil','Profile'),branding:text('Logo','Logo'),controls:text('Bedienung','Controls'),buckle:text('Detail & Logo','Detail & logo'),fabric:text('Stoff & Naht','Fabric & seam'),rollers:text('Massagerollen','Rollers')}
+export const pillowText={
+  de:{title:'Massagekissen',subtitle:'Memory-Schaum · 22 × 22 × 10,9 cm',scene:'Massagekissen in 3D',product:'Produkt',colour:'Schwarz / Grau',material:'Weicher Polyesterbezug · PU-Gurte · USB-C',logo:'Dein Logo',branding:'Veredelung',method:'Verfahren',none:'Ohne Logo',views:'Ansichten',free:'Freie Ansicht',reset:'Gesamtansicht',area:'Druckfläche',colours:'Druckfarben',download:'PNG herunterladen',remove:'Logo entfernen',restore:'Beispiellogo',sample:'Farbiges Beispiellogo',upload:'Eigenes Logo hochladen',replace:'Logo ersetzen',formats:'SVG, PNG, JPG, WebP · max. 10 MB',loading:'Kissen wird geladen…',retry:'Erneut laden',source:'Produktdetails',embroidery:'Erhabene Fäden mit feiner Struktur und weichem Glanz.',transfer:'Vollfarbiger, matter Transfer auf dem schwarzen Bezug.',reflective:'Silberfarbener Transfer mit metallischem Glanz.','screen-transfer':'Siebtransfer mit 1–8 Druckfarben.',hide:'Kein Logo. Deine Datei bleibt erhalten.'},
+  en:{title:'Massage pillow',subtitle:'Memory foam · 22 × 22 × 10.9 cm',scene:'Massage pillow in 3D',product:'Product',colour:'Black / grey',material:'Soft polyester cover · PU straps · USB-C',logo:'Your logo',branding:'Decoration',method:'Method',none:'No logo',views:'Views',free:'Free view',reset:'Overview',area:'Print area',colours:'Print colours',download:'Download PNG',remove:'Remove logo',restore:'Restore sample logo',sample:'Colour sample logo',upload:'Upload your logo',replace:'Replace logo',formats:'SVG, PNG, JPG, WebP · max. 10 MB',loading:'Loading pillow…',retry:'Try again',source:'Product details',embroidery:'Raised threads with a fine texture and soft sheen.',transfer:'Full-colour matte transfer on the black cover.',reflective:'Silver transfer with a metallic sheen.','screen-transfer':'Screen transfer with 1–8 spot colours.',hide:'No logo. Your file is kept.'},
+}

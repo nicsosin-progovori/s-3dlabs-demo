@@ -1,0 +1,41 @@
+{
+  "glbSha256": "31e75f7bd2bcdcda2676a1340d2444655e8b675324d38083bd946f913c1fcea8",
+  "widthMm": 148,
+  "heightMm": 210,
+  "thicknessMm": 14.476406,
+  "sourceCoverDimensions": {
+    "longAxis": 1.6528260111808777,
+    "shortAxis": 1.1091089844703674
+  },
+  "scaleFactors": {
+    "heightAndThickness": 0.12705511565005165,
+    "width": 0.13344044820868023
+  },
+  "sourceTriangles": 76464,
+  "printTriangles": 12288,
+  "printProjection": {
+    "widthMm": 100,
+    "heightMm": 150,
+    "offsetMm": 0.06,
+    "sampledCoverFaces": 134
+  },
+  "bookmarkVerticesRaisedToFloor": 480,
+  "materialFinish": {
+    "roughness": 0.88,
+    "metallic": 0,
+    "normalStrength": 0.35
+  },
+  "sourceMapsUsedInWeb": [
+    "base",
+    "normal"
+  ],
+  "sourceHashes": {
+    "Meshy_AI_Tan_Notebook_with_Ela_1019114006_texture.fbx": "b104995694acbd2bbe467e1a2356ed57863e26d42c9989a370d81c697f4c3c8a",
+    "Meshy_AI_Tan_Notebook_with_Ela_1019114006_texture.png": "a216b6d46aebb4e980e1f2e55d773815bdeb7f7cac7b9515d8b6f3dc956c98c8",
+    "Meshy_AI_Tan_Notebook_with_Ela_1019114006_texture_normal.png": "d1fbbff8a9ecf0b78021a5e375d0290878660b351678dc089069261d4366622a",
+    "Meshy_AI_Tan_Notebook_with_Ela_1019114006_texture_roughness.png": "cab1f5fae80e061397c0f73648b09785297dd9f39ccbcc86822832d7b360d2c5",
+    "Meshy_AI_Tan_Notebook_with_Ela_1019114006_texture_metallic.png": "297a309f79e1640bfc3a997add386386bfeddfb1e0818de478c70aef80936da5"
+  },
+  "specificationSha256": "bfd2c37e665790ffd98039a7f52ad0d515ac5c874c9af4b5f5fe28ce0a85fc31",
+  "canonicalFrame": "glTF Y up; notebook lies on floor; spine left, elastic right, bookmark bottom-left in initial view"
+}

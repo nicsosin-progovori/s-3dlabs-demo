@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "glbSha256": "a2f941cd2dc7e8345b124aa598bb044b9532207f5e731ddde68d5f72ff2b2dc4",
+  "bytes": 3015180,
+  "sourceFile": "prepared-v02.blend",
+  "assetFile": "endo-rig-v02.glb",
+  "units": "metres",
+  "strapLengthMm": 240,
+  "materialRangeMm": [
+    -135,
+    105
+  ],
+  "segments": 128,
+  "bones": 129,
+  "canonicalFrame": "glTF Y-up; tracker local X width, Y front, Z material length",
+  "moduleMm": [
+    27,
+    8,
+    42
+  ],
+  "boxMm": [
+    143,
+    17,
+    84
+  ],
+  "reference": "https://www.source-werbeartikel.com/endo-gesundheitstracker-51-p330-90-c",
+  "approximation": "240 mm strap and reconstructed hinged packaging interior; owner authorizes visual approximation."
+}

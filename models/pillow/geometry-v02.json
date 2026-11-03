@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "units": "metres",
+  "glbSha256": "c960eee7962a7636609ec19a482e64c0a13735b7ac6c75a14a6fff5b57e74e7e",
+  "bytes": 7108692,
+  "sourceFile": "prepared-v02.blend",
+  "assetFile": "pillow-v02.glb",
+  "bodyNominalMm": [
+    220,
+    109,
+    220
+  ],
+  "bodyBounds": {
+    "min": [
+      -0.10999976843595505,
+      0.0,
+      -0.10999999940395355
+    ],
+    "max": [
+      0.10999976843595505,
+      0.10899999737739563,
+      0.10999999940395355
+    ]
+  },
+  "reference": "https://www.source-werbeartikel.com/wiederaufladbares-massagkissen",
+  "state": "ready",
+  "secondaryDetails": "Photographic reconstruction of seams, controls, loose PU loops and open buckle halves. Embroidery is an owner-authorized visualization method."
+}

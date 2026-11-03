@@ -1,0 +1,87 @@
+{
+  "sourceMaster": "/Users/nsosin/Projects/source-3d/models/bottle/prepared-v02.blend",
+  "sourceMasterSha256": "aa2ce9609345cfa92250473b8e6eb0a89043f731c615082ddf8a505c7e9624ec",
+  "referenceGlbSha256": "da4605b3ff36ed622262c9499ad21996b70a604f2fa3e6a19669eada895e6c3f",
+  "sourceFile": "prepared-hq-v01.blend",
+  "rawExport": ".cache/model-build/bottle-hq-v01.glb",
+  "triangles": 21980,
+  "meshes": [
+    {
+      "name": "BaseRim",
+      "before": 1152,
+      "after": 384
+    },
+    {
+      "name": "BottleBodyDecoration",
+      "before": 4608,
+      "after": 960
+    },
+    {
+      "name": "InternalSteelThread",
+      "before": 3840,
+      "after": 1920
+    },
+    {
+      "name": "BambooTopDecoration",
+      "before": 2,
+      "after": 2
+    },
+    {
+      "name": "CapThreadDetail",
+      "before": 2560,
+      "after": 1280
+    },
+    {
+      "name": "HandlePivotRivet",
+      "before": 528,
+      "after": 290
+    },
+    {
+      "name": "HandlePivotRivet.001",
+      "before": 528,
+      "after": 290
+    },
+    {
+      "name": "LidBambooTop",
+      "before": 3072,
+      "after": 1024
+    },
+    {
+      "name": "LidSiliconeSeal",
+      "before": 4608,
+      "after": 1024
+    },
+    {
+      "name": "LidSiliconeSeal.001",
+      "before": 4608,
+      "after": 1024
+    },
+    {
+      "name": "LidSteelCollar",
+      "before": 4992,
+      "after": 1536
+    },
+    {
+      "name": "LidThreadPlug",
+      "before": 3456,
+      "after": 1152
+    },
+    {
+      "name": "SteelCarryHandle",
+      "before": 1320,
+      "after": 726
+    },
+    {
+      "name": "SteelNeckAndInnerWall",
+      "before": 10752,
+      "after": 4608
+    },
+    {
+      "name": "VacuumBottleBody",
+      "before": 16512,
+      "after": 5760
+    }
+  ],
+  "maxTextureSize": 512,
+  "coatingTextureResolutionPreserved": true
+}
