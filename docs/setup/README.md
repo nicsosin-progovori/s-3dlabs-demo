@@ -39,23 +39,22 @@ Node ≥ 22 (`.nvmrc` = 22). Для серверного PNG — Chromium Playwr
 - значения подогнаны под хост (память 160 МБ; имя контейнера с датой в systemd);
 - нет `.dockerignore`, нет `docker-compose` для локали, нет разделения build/runtime.
 
-## Docker — целевое состояние (предложение к перестройке)
-1. **Корневой `Dockerfile`, multi-stage**: stage `builder` (node:22) → `npm ci` +
-   `npm run build`; stage `runtime` (Playwright base) → копирует `dist` из builder +
-   `server/shared/config/models`, `npm ci --omit=dev`. Собирается из чистого клона:
-   `docker build .`.
-2. **`.dockerignore`** (node_modules, .git, .cache, tests, src) — лёгкий контекст.
-3. **Корневой `docker-compose.yml`** для локали: `docker compose up` поднимает
-   сервис на `PORT`, пробрасывает env, volume под загруженные логотипы/результаты.
-4. **Параметризация через env/ARG**: PORT/HOST/BOTTLE_ALLOWED_ORIGINS/NODE_OPTIONS/
-   память — ничего не хардкодим под конкретный хост.
-5. **`ops/<target>/` — тонкий оверлей** (systemd/nginx/certbot) поверх общего образа;
-   таргет-специфика не смешивается со сборкой.
-6. **Health/лимиты**: `/api/health` сохранить; ресурсные лимиты — в compose/
-   оркестраторе, а не в образе.
+## Docker — целевое состояние (предложение к совместному ревью)
+Решение по Docker **обсуждаем вместе**; файлы пока не создаём. Направление —
+вынести всю DevOps-часть в одну осознанную папку (предлагаю `ops/`), чтобы было
+явно видно, что и как поднимается и что для этого нужно:
+1. `ops/docker/Dockerfile` — multi-stage: `builder` (node:22) `npm ci && npm run
+   build`; `runtime` (образ Playwright) копирует `dist` + `server/shared/config/
+   models`, `npm ci --omit=dev`. Собирается из чистого клона.
+2. `ops/docker/docker-compose.yml` — локальный `docker compose up`, env + volume под
+   логотипы/результаты. `.dockerignore` — относительно контекста сборки
+   (`ops/docker/Dockerfile.dockerignore` при BuildKit).
+3. Хостовое — через env/ARG (PORT/HOST/BOTTLE_ALLOWED_ORIGINS/NODE_OPTIONS).
+4. `ops/<target>/` (напр. `ops/selectel/`) — тонкий оверлей (systemd/nginx/certbot)
+   поверх общего образа. Старый `ops/selectel/Dockerfile` держим до миграции.
 
-Итог: `git clone && docker build && docker run` (или `docker compose up`) на любой
-машине; Selectel — частный случай поверх того же образа.
+Итог: `docker compose -f ops/docker/docker-compose.yml up` (или
+`docker build -f ops/docker/Dockerfile .`) — на любой машине; Selectel — частный случай.
 
 ## Открытые вопросы (связь с архитектурой)
 - Где хранить загруженные логотипы и PNG-результаты (локальный volume vs внешний
