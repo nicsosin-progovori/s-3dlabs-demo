@@ -63,3 +63,8 @@ _Собираем по ходу прохода по `README.md`. Выводы �
 - Добавлена стадия `dev` (Playwright base + полные зависимости) и сервис `dev` (профиль dev) в compose.
 - bind-mount `app/ ↔ контейнер` (исходники и app/dist синхронны с хостом); `node_modules`/`.cache` — в named volumes (не на хост: платформенные бинарники), в git не идут.
 - Запуск: `ops/bin/dev docker`. HMR через CHOKIDAR_USEPOLLING. web/renderer сборки получили явный target: runtime.
+
+## Контейнеры: доработки
+- Прокси был под профилем `edge` (поэтому не поднимался обычным start/up) — добавлена команда `ops/bin/edge` (web+renderer+proxy, :8080).
+- npm поднят до 12.2.1: ARG NPM_VERSION в Dockerfile (ставится во всех стадиях) + packageManager в app/package.json.
+- restart: unless-stopped закомментирован (демон on-demand).

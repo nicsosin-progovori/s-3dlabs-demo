@@ -21,9 +21,9 @@ ops/bin/up -d         # в фоне
 ops/bin/logs renderer
 ops/bin/sh web        # зайти внутрь контейнера
 ```
-С локальным прокси (один вход :8080, роутинг web/renderer):
+С локальным прокси (один вход :8080, роутинг web/renderer) — профиль `edge` (в обычном `start`/`up` выключен):
 ```
-docker compose -f ops/docker/docker-compose.yml --profile edge up --build
+ops/bin/edge          # web + renderer + proxy, http://127.0.0.1:8080
 ```
 Разработка — на хосте (прокси не нужен):
 ```

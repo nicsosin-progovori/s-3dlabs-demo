@@ -121,6 +121,7 @@ ops/bin/stop           # остановить
 | `ops/bin/build` | Пересобрать образ |
 | `ops/bin/rebuild [svc]` | Пересобрать образ и переката́ть в поднятый демон (в фоне); рабочий цикл при изменениях кода |
 | `ops/bin/health` | Проверить `/api/health` обоих сервисов |
+| `ops/bin/edge` | Поднять полный стек с обратным прокси (web+renderer+proxy) → единый вход `:8080` |
 | `ops/bin/dev` | Dev на хосте (Node ≥22; при первом запуске сам `npm ci`) → :5180 |
 | `ops/bin/dev front` | Dev на хосте, только фронт с HMR → :5173 |
 | `ops/bin/dev docker` | Dev в контейнере с синхронизацией `app/` ↔ контейнер; в фоне; сначала останавливает web/renderer (:5180), печатает статус и логи |
@@ -128,8 +129,8 @@ ops/bin/stop           # остановить
 | `ops/bin/logs [svc]` | Логи сервиса (follow) |
 | `ops/bin/test` | Юнит-тесты в контейнере (стадия `deps`) |
 
-Единый вход через локальный прокси (роутинг `/api/render` → renderer):
-`docker compose -f ops/docker/docker-compose.yml --profile edge up` → `http://127.0.0.1:8080`.
+Единый вход через локальный прокси (роутинг `/api/render` → renderer) — `ops/bin/edge` → `http://127.0.0.1:8080`.
+Прокси выключен в обычном `start`/`up` (он под профилем `edge`), поэтому отдельно не мешает.
 
 ### Dev на хосте без пульта
 ```bash
