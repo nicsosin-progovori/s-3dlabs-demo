@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Пересобрать образ и переката́ть в поднятый демон (в фоне). Можно указать сервис:
+#   ops/bin/rebuild            # web + renderer
+#   ops/bin/rebuild web        # только web
+exec docker compose -f "$DIR/../docker/docker-compose.yml" up -d --build "$@"

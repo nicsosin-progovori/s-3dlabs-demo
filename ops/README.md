@@ -60,7 +60,9 @@ Dev в контейнере (`ops/bin/dev docker` = `docker compose --profile de
 - **Переезд в `app/`**: Фаза 2 (см. `docs/architecture/migration-plan.md`).
 
 ## Рабочий цикл (демон)
-Демон = web + renderer в фоне с `restart: unless-stopped` (переживают перезапуск Docker).
+Демон = web + renderer в фоне (on-demand): работают, пока не остановишь `ops/bin/stop`;
+сами после перезапуска Docker/ПК НЕ поднимаются. Нужно авто-поднятие — раскомментируй
+`restart: unless-stopped` в `ops/docker/docker-compose.yml`.
 ```
 ops/bin/start          # поднять демон в фоне (первый раз соберёт образ)
 ops/bin/rebuild        # после правок кода: пересобрать и переката́ть, не выходя из фона
