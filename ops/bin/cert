@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CERTDIR="$DIR/../docker/certs"
+DOMAIN="${1:-}"
+if [ -z "$DOMAIN" ] && [ -f "$DIR/../docker/.env" ]; then
+  DOMAIN="$(grep -E '^DOMAIN=' "$DIR/../docker/.env" | head -1 | cut -d= -f2-)"
+fi
+DOMAIN="${DOMAIN:-scena.develop}"
+mkdir -p "$CERTDIR"
+CRT="$CERTDIR/$DOMAIN.pem"
+KEY="$CERTDIR/$DOMAIN-key.pem"
+
+# Вариант 1: mkcert — локально доверенный сертификат без предупреждений (macOS/Linux/Windows)
+if command -v mkcert >/dev/null 2>&1; then
+  echo "→ mkcert: устанавливаю локальный CA и выпускаю доверенный сертификат для $DOMAIN"
+  mkcert -install
+  mkcert -cert-file "$CRT" -key-file "$KEY" "$DOMAIN" localhost 127.0.0.1
+  echo "✓ Готово (доверенный). Перезапусти стек: ops/bin/start → https://$DOMAIN"
+  exit 0
+fi
+
+# Вариант 2: самоподписанный через openssl + доверие под текущую ОС
+if [ ! -f "$CRT" ] || [ ! -f "$KEY" ]; then
+  echo "→ openssl: генерирую самоподписанный сертификат для $DOMAIN"
+  openssl req -x509 -newkey rsa:2048 -nodes -days 825 \
+    -keyout "$KEY" -out "$CRT" \
+    -subj "/CN=$DOMAIN" \
+    -addext "subjectAltName=DNS:$DOMAIN,DNS:localhost,IP:127.0.0.1"
+else
+  echo "→ сертификат уже есть: $CRT"
+fi
+
+case "$(uname -s)" in
+  Darwin)
+    echo "→ доверяю сертификат в System Keychain (нужен sudo)"
+    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "$CRT"
+    echo "✓ Готово. Перезапусти стек: ops/bin/start → https://$DOMAIN"
+    ;;
+  Linux)
+    echo "ℹ Linux — доверь вручную (путь: $CRT):"
+    echo "   sudo cp \"$CRT\" /usr/local/share/ca-certificates/$DOMAIN.crt && sudo update-ca-certificates"
+    echo "   (браузерам может понадобиться импорт в их собственное хранилище)"
+    ;;
+  *)
+    echo "ℹ Доверь сертификат вручную: $CRT"
+    ;;
+esac

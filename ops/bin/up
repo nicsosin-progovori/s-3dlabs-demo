@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec docker compose -f "$DIR/../docker/docker-compose.yml" up --build "$@"
+COMPOSE=(docker compose -f "$DIR/../docker/docker-compose.yml")
+# Переключение режима: гасим dev/edge/прежний стек, чтобы не конфликтовать по портам.
+"${COMPOSE[@]}" --profile dev down --remove-orphans >/dev/null 2>&1 || true
+exec "${COMPOSE[@]}" up --build "$@"

@@ -10,11 +10,13 @@ services:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile
-      target: runtime
-    image: s-3dlabs:latest
+      target: web
+    image: s-3dlabs-web:latest
+    depends_on: [renderer]
     environment:
       PORT: 5180
       HOST: 0.0.0.0
+      RENDERER_URL: http://renderer:5181      # рендер уходит в renderer; web без браузера
       BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
       NODE_OPTIONS: ${WEB_NODE_OPTIONS:-}
     ports: ["5180:5180"]
@@ -22,8 +24,11 @@ services:
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
 
   renderer:
-    image: s-3dlabs:latest
-    depends_on: [web]
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      target: runtime
+    image: s-3dlabs-renderer:latest
     environment:
       PORT: 5181
       HOST: 0.0.0.0
@@ -59,10 +64,15 @@ services:
 
   proxy:
     image: nginx:1.27-alpine
-    profiles: ["edge"]
     depends_on: [web, renderer]
-    ports: ["8080:80"]
-    volumes: ["./nginx.conf:/etc/nginx/nginx.conf:ro"]
+    environment:
+      DOMAIN: ${DOMAIN:-scena.develop}
+    ports:
+      - "${EDGE_PORT:-80}:80"
+      - "${EDGE_HTTPS_PORT:-443}:443"
+    volumes:
+      - "./scena.conf.template:/etc/nginx/templates/scena.conf.template:ro"
+      - "./certs:/etc/nginx/certs:ro"
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
 
 volumes:

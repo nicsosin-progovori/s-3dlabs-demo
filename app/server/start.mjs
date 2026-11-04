@@ -78,6 +78,17 @@ const server=createServer(async(request,response)=>{
     if(url.pathname==='/api/render'){
       if(request.method!=='POST'){response.setHeader('Allow','POST');json(response,405,{error:'Method not allowed'});return}
       assertRequestOrigin(request,allowedOrigins)
+      if(process.env.RENDERER_URL){
+        const body=await readRequestBody(request,16_384)
+        let upstream
+        try{upstream=await fetch(new URL('/api/render',process.env.RENDERER_URL),{method:'POST',headers:{'content-type':'application/json'},body})}catch{throw new RenderError(502,'Der Renderer ist nicht erreichbar.')}
+        const forwarded=Buffer.from(await upstream.arrayBuffer())
+        const pass={}
+        for(const k of ['content-type','content-disposition','cache-control','x-content-type-options','x-render-engine','x-render-id','x-render-skin','x-render-camera-sha256','x-render-scene','x-render-scene-sha256','x-render-composition-sha256','x-render-decoration-sha256']){const v=upstream.headers.get(k);if(v!==null)pass[k]=v}
+        if(response.destroyed)return
+        response.writeHead(upstream.status,{...pass,'Content-Length':forwarded.length})
+        response.end(forwarded);return
+      }
       let job
       try{job=validateRenderRequest(await readJson(request))}catch(error){if(error instanceof RenderError)throw error;throw new RenderError(400,error.message)}
       const scene=await readScene(sceneRoot,job.scene??DEFAULT_SCENE)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Полный стек с обратным прокси: web + renderer + proxy. Единый вход — http://127.0.0.1:8080
-# (прокси роутит /api/render → renderer, остальное → web). В фоне.
-exec docker compose -f "$DIR/../docker/docker-compose.yml" --profile edge up -d --build "$@"
+# edge свёрнут в start: прокси теперь всегда в стеке (домен scena.develop).
+echo "ℹ edge свёрнут в start — прокси теперь поднимается всегда."
+exec "$DIR/start" "$@"

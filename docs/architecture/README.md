@@ -190,6 +190,7 @@ PNG → освободился). Выносим в `03-camera.md` + раздел
 - [`overview.md`](overview.md) — обзор проекта (держим синхронно с этим README).
 - [`project-anatomy.md`](project-anatomy.md) — из чего состоит проект: сборка,
   пакеты, зависимости, модули, деплой/Docker.
+- [`devops.md`](devops.md) — как устроены контейнеры (стадии, образы, сервисы, roadmap расслоения).
 - [`environment.md`](environment.md) — среда и топология: что где работает, сервисы, инфраструктура, зоны ответственности.
 - [`interfaces.md`](interfaces.md) — карта TypeScript-интерфейсов (→ `shared/*.d.mts`).
 - [`04-scene.md`](04-scene.md) — слой «Сцена» (первый разобранный слой).

@@ -24,3 +24,6 @@ __pycache__/
 
 # Доставленные Claude файлы (не часть проекта)
 Claude outputs/
+
+# Локальные TLS-сертификаты (приватный ключ!)
+ops/docker/certs/

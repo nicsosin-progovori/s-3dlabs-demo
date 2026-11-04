@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Остановить и убрать контейнеры/сеть (volume uploads сохраняется).
-exec docker compose -f "$DIR/../docker/docker-compose.yml" down "$@"
+# Остановить ВСЕ режимы (включая dev и edge/proxy) и убрать сеть. Volume uploads сохраняется.
+exec docker compose -f "$DIR/../docker/docker-compose.yml" \
+  --profile dev down --remove-orphans "$@"

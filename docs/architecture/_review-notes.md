@@ -68,3 +68,34 @@ _Собираем по ходу прохода по `README.md`. Выводы �
 - Прокси был под профилем `edge` (поэтому не поднимался обычным start/up) — добавлена команда `ops/bin/edge` (web+renderer+proxy, :8080).
 - npm поднят до 12.2.1: ARG NPM_VERSION в Dockerfile (ставится во всех стадиях) + packageManager в app/package.json.
 - restart: unless-stopped закомментирован (демон on-demand).
+
+## Решения
+- Разъяснения по devops вынесены в docs/architecture/devops.md (справка для владельца).
+- #4 (digest pin) и #5 (CI) — отложены («позже»).
+- Расслоение 1/2/3 согласовано; порядок: код-шов web→renderer → лёгкий web → Фаза 3/workspaces. Код-шов — следующий шаг (изменения в app/server, с точкой проверки).
+
+## Код-шов + лёгкий web (сделано, ждёт проверки)
+- app/server/start.mjs: /api/render при заданном RENDERER_URL пересылает запрос в renderer (fetch, без Origin → проходит assertRequestOrigin), возвращает PNG и X-Render-* заголовки; без RENDERER_URL — рендерит локально (как раньше).
+- Dockerfile: стадия web (node:22-slim, без Chromium) + стадия runtime (renderer, Playwright). Два образа: s-3dlabs-web, s-3dlabs-renderer.
+- compose: web → target web + RENDERER_URL=http://renderer:5181 + depends_on renderer; renderer → target runtime.
+- dev-контейнер (монолит) и прямой renderer:5181 рендерят локально (RENDERER_URL не задан).
+- Проверка 3: rebuild → health оба ок; /bottle.html + PNG (через web→renderer); test 71/71; web-образ заметно меньше renderer.
+
+## Виртуалхост scena.develop
+- nginx.conf: server_name scena.develop + proxy_set_header Host $host (иначе Origin!=Host → 403 на POST).
+- proxy на порт ${EDGE_PORT:-80}:80. Запуск: ops/bin/edge → http://scena.develop (нужна запись 127.0.0.1 scena.develop в /etc/hosts хоста).
+
+## Режимы запуска взаимоисключающие (one at a time)
+- start/edge/dev docker — разные режимы на одних портах 5180/5181. Теперь up/start/edge/dev docker сами делают down прежнего режима (--profile dev --profile edge down) перед подъёмом. rebuild — in-place (без down). stop — гасит всё.
+- Хост-dev (ops/bin/dev, npm) нельзя погасить через compose — перед ним ops/bin/stop.
+
+## Баг «модель без текстур на scena.develop» — решён
+- Симптом: через прокси текстуры не запрашивались (меньше файлов, console пусто), модель без скина.
+- Причина: nginx по умолчанию ходит к апстриму по HTTP/1.0 → артефакт транспорта → строгая проверка в skinLoader (`data.byteLength!==size`) падает → манифест скина не проходит → текстуры не грузятся. GLB грузился (там такой проверки нет).
+- Фикс (nginx.conf): proxy_http_version 1.1 + Connection "" (+ proxy_set_header Host $host для Origin==Host). Проверено: skin.json и текстуры байт-в-байт равны прямому доступу (597 и т.д.), коды 200.
+- Вариант 1 применён: proxy всегда в стеке, start даёт scena.develop; edge → алиас start.
+
+## Корень бага: secure context (crypto.subtle)
+- http://scena.develop — не secure context (не loopback) → window.crypto.subtle undefined → проверки SHA-256 в skinLoader/sceneLoader бросают → скин/сцена не грузятся, текстуры не запрашиваются (0). На 127.0.0.1 работает (secure context).
+- Решение (выбран вариант 2): HTTPS на прокси. Самоподписанный cert ops/docker/certs/scena.develop.pem (SAN scena.develop/localhost/127.0.0.1), nginx 443 ssl + 80→443 редирект, compose публикует 443 + монтирует certs. certs в .gitignore.
+- Доступ: https://scena.develop; cert доверить в Keychain (или проскочить предупреждение — secure context всё равно включается).

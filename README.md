@@ -100,6 +100,27 @@ low-пакет около 196 КБ, затем оптимизированный 
 Приложение — в `app/`, DevOps-оснастка — в `ops/`, документация — в `docs/`.
 Подробнее: [`ops/README.md`](ops/README.md), [`docs/setup/`](docs/setup/README.md).
 
+### Быстрый старт — локальный домен `https://scena.develop`
+```
+# 1) один раз: /etc/hosts →  127.0.0.1 scena.develop
+ops/bin/cert       # локальный TLS-сертификат (mkcert, иначе openssl + доверие)
+ops/bin/start      # поднять стек (web+renderer+proxy)
+```
+→ открыть **https://scena.develop/bottle.html**
+HTTPS обязателен: без secure context браузер не даёт `crypto.subtle`, и 3D не грузится.
+Напрямую без домена/HTTPS работает `http://127.0.0.1:5180/bottle.html`.
+
+Домен и порты задаются в `ops/docker/.env` (`DOMAIN`, `EDGE_PORT`, `EDGE_HTTPS_PORT`) — один конфиг для nginx, compose и `ops/bin/cert`; шаблон — `ops/docker/.env.example`.
+
+### Режимы запуска (один за раз)
+Все режимы на портах 5180/5181 — взаимоисключающие; «подъёмные» команды сами гасят предыдущий:
+- `ops/bin/start` — демон web+renderer+proxy → `https://scena.develop` (и напрямую `:5180`);
+- `ops/bin/edge` — алиас `start`;
+- `ops/bin/dev docker` — dev-контейнер с синхронизацией `app/`;
+- `ops/bin/dev` — dev на хосте (НЕ docker; сначала `ops/bin/stop`);
+- `ops/bin/rebuild` — применить правки к демону на месте (режим не меняет);
+- `ops/bin/stop` — остановить всё.
+
 ### Демон (рабочий цикл)
 ```
 ops/bin/start          # поднять демон в фоне: web :5180 + renderer :5181
@@ -121,7 +142,7 @@ ops/bin/stop           # остановить
 | `ops/bin/build` | Пересобрать образ |
 | `ops/bin/rebuild [svc]` | Пересобрать образ и переката́ть в поднятый демон (в фоне); рабочий цикл при изменениях кода |
 | `ops/bin/health` | Проверить `/api/health` обоих сервисов |
-| `ops/bin/edge` | Поднять полный стек с обратным прокси (web+renderer+proxy) → единый вход `:8080` |
+| `ops/bin/edge` | Поднять полный стек с обратным прокси → виртуалхост `http://scena.develop` |
 | `ops/bin/dev` | Dev на хосте (Node ≥22; при первом запуске сам `npm ci`) → :5180 |
 | `ops/bin/dev front` | Dev на хосте, только фронт с HMR → :5173 |
 | `ops/bin/dev docker` | Dev в контейнере с синхронизацией `app/` ↔ контейнер; в фоне; сначала останавливает web/renderer (:5180), печатает статус и логи |
@@ -129,8 +150,12 @@ ops/bin/stop           # остановить
 | `ops/bin/logs [svc]` | Логи сервиса (follow) |
 | `ops/bin/test` | Юнит-тесты в контейнере (стадия `deps`) |
 
-Единый вход через локальный прокси (роутинг `/api/render` → renderer) — `ops/bin/edge` → `http://127.0.0.1:8080`.
-Прокси выключен в обычном `start`/`up` (он под профилем `edge`), поэтому отдельно не мешает.
+Виртуалхост **`https://scena.develop`** (HTTPS обязателен — иначе браузер не даёт
+`crypto.subtle`, и скин/сцена не грузятся):
+1. `/etc/hosts`: `127.0.0.1 scena.develop`
+2. один раз: `ops/bin/cert` — сгенерит и доверит локальный сертификат (mkcert если есть, иначе openssl+keychain);
+3. `ops/bin/start` → `https://scena.develop` (HTTP :80 редиректит на HTTPS).
+Порты меняются `EDGE_PORT` / `EDGE_HTTPS_PORT`, если 80/443 заняты.
 
 ### Dev на хосте без пульта
 ```bash

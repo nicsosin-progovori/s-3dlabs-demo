@@ -4,8 +4,7 @@
 сюда не лезет. Статус: **Фаза 1** (харнесс на коде «как есть», без переезда в `app/`).
 
 ## Структура
-- `docker/Dockerfile` — self-contained multi-stage образ (builder собирает `dist`,
-  runtime на базе Playwright несёт `dist` + server/shared/config/models).
+- `docker/Dockerfile` — multi-stage: `renderer` (runtime, Playwright+Chromium) и лёгкий `web` (node:22-slim, без браузера). web пересылает `/api/render` в renderer (`RENDERER_URL`).
 - `docker/docker-compose.yml` — сервисы `web` (:5180) и `renderer` (:5181) из одного
   образа; опциональный `proxy` (профиль `edge`).
 - `docker/nginx.conf` — локальный обратный прокси: `/api/render` → renderer, остальное → web.
@@ -23,7 +22,9 @@ ops/bin/sh web        # зайти внутрь контейнера
 ```
 С локальным прокси (один вход :8080, роутинг web/renderer) — профиль `edge` (в обычном `start`/`up` выключен):
 ```
-ops/bin/edge          # web + renderer + proxy, http://127.0.0.1:8080
+ops/bin/edge          # web + renderer + proxy → http://scena.develop
+# заранее: в /etc/hosts добавить  127.0.0.1 scena.develop
+# если :80 занят →  EDGE_PORT=8080 ops/bin/edge  → http://scena.develop:8080
 ```
 Разработка — на хосте (прокси не нужен):
 ```
