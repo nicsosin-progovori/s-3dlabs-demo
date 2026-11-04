@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Остановить и убрать контейнеры/сеть (volume uploads сохраняется).
+exec docker compose -f "$DIR/../docker/docker-compose.yml" down "$@"

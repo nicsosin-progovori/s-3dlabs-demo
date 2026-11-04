@@ -21,3 +21,6 @@ __pycache__/
 .env.*
 !.env.example
 .idea
+
+# Доставленные Claude файлы (не часть проекта)
+Claude outputs/

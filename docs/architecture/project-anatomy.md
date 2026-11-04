@@ -30,24 +30,24 @@ _Архитектурный разбор состава: сборка, паке�
 (`@types/react`, `@types/react-dom`, `@types/three`). Node ≥ 22 (`.nvmrc`).
 
 ## Карта модулей
-- **`shared/*.mjs` (+ `.d.mts`)** — контракты-валидаторы (render/scene/skin/camera/
+- **`app/shared/*.mjs` (+ `.d.mts`)** — контракты-валидаторы (render/scene/skin/camera/
   composition/branding). Чистый ESM без three.js; импортируются и клиентом, и
   сервером. Ядро: единый источник правды на оба рендерера.
-- **`server/`** — Node-сервер (без фреймворка): `start.mjs` (HTTP, роутинг, раздача
-  `dist`, static-range, CORS), `renderer.mjs` + `browser.mjs` (PNG через Playwright),
+- **`app/server/`** — Node-сервер (без фреймворка): `start.mjs` (HTTP, роутинг, раздача
+  `app/dist`, static-range, CORS), `renderer.mjs` + `browser.mjs` (PNG через Playwright),
   `scenes.mjs` / `cameraViews.mjs` / `logos.mjs` (API доставки), `http.mjs`,
   `cors.mjs`.
-- **`src/`** — фронтенд (React + fiber). Страницы/студии (`App`, `BottleApiPage`,
+- **`app/src/`** — фронтенд (React + fiber). Страницы/студии (`App`, `BottleApiPage`,
   `*Studio`, `*Scene`), загрузчики (`sceneLoader`, `skinLoader`), адаптеры слоёв
   (`bottle*`, `studio*`, `camera*`, `composition*`, `logo*`), i18n, стили.
-- **`config/`** — рантайм-JSON доставки: `scenes/` (указатель + профили),
+- **`app/config/`** — рантайм-JSON доставки: `scenes/` (указатель + профили),
   `camera-views/bottle.json`.
-- **`models/<product>/`** — спеки/манифесты/геометрия (мастер + эталонный GLB).
-- **`public/`** — статика, раздаётся как есть: `models/` (GLB), `skins/bottle/`
+- **`app/models/<product>/`** — спеки/манифесты/геометрия (мастер + эталонный GLB).
+- **`app/public/`** — статика, раздаётся как есть: `app/models/` (GLB), `skins/bottle/`
   (skin.json по цветам), `textures/` (PNG, имена = sha256, immutable-кэш).
-- **`scripts/`** — пайплайн подготовки моделей (Blender через `blender.mjs`,
+- **`app/scripts/`** — пайплайн подготовки моделей (Blender через `blender.mjs`,
   python-скрипты `prepare-*`), QA/сравнения, share-preview/ngrok, юнит-тесты `.mjs`.
-- **`tests/`** — Playwright e2e (`.spec.ts`) + node:test контрактов.
+- **`app/tests/`** — Playwright e2e (`.spec.ts`) + node:test контрактов.
 - **`ops/selectel/`** — инфраструктура одного таргета (Dockerfile, systemd, nginx,
   certbot, benchmark).
 
@@ -59,18 +59,18 @@ _Архитектурный разбор состава: сборка, паке�
 
 ## Деплой и Docker — предложение к ревью
 Текущий прод: Docker на Selectel + systemd + nginx + certbot. Сервер — один процесс
-(раздаёт `dist` + API, PNG через Playwright).
+(раздаёт `app/dist` + API, PNG через Playwright).
 
 **Проблема as-is**: `ops/selectel/Dockerfile` несамодостаточный (копирует заранее
-собранный `dist`, фронт собирается вне контейнера) и заточен под один хост;
+собранный `app/dist`, фронт собирается вне контейнера) и заточен под один хост;
 devops-часть размазана.
 
 **Предложение (обсуждаем вместе, НЕ зафиксировано; файлы пока не создаём)** —
 вынести ВСЮ devops-часть в одну осознанную папку, предлагаю `ops/` как единый дом,
 чтобы было видно «что и как поднимается и что для этого нужно»:
 - `ops/docker/` — общий образ: multi-stage `Dockerfile` (`builder` node:22 →
-  `npm ci && npm run build`; `runtime` на образе Playwright копирует `dist` +
-  `server/shared/config/models`, `npm ci --omit=dev`). Собирается из чистого клона.
+  `npm ci && npm run build`; `runtime` на образе Playwright копирует `app/dist` +
+  `app/server/shared/config/models`, `npm ci --omit=dev`). Собирается из чистого клона.
 - `ops/docker/docker-compose.yml` — локальный `docker compose up` (env + volume под
   логотипы/результаты). Нюанс к ревью: `.dockerignore` работает относительно
   контекста сборки — при `-f ops/docker/Dockerfile` с контекстом репо берём

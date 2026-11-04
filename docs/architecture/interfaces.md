@@ -3,18 +3,18 @@
 Статус: черновик-каркас. Заполняем по мере разбора слоёв.
 
 ## Почему TypeScript подходит
-Проект уже на TypeScript, и у каждого контракта-валидатора в `shared/` есть
+Проект уже на TypeScript, и у каждого контракта-валидатора в `app/shared/` есть
 парная декларация `.d.mts` — то есть типы здесь не надстройка, а действующий
 стандарт. Этот файл — **человеко-читаемая карта**: сводит интерфейсы всех слоёв в
 одном месте и ссылается на реализованные типы как на источник правды.
 
 ## Источник правды (реализовано)
-- `shared/renderContract.d.mts` — сборный запрос рендера (версии фич).
-- `shared/sceneContract.d.mts` — профиль сцены и ссылка на сцену.
-- `shared/skinContract.d.mts` — ссылка на скин, дескриптор, реестр.
-- `shared/cameraViewsContract.d.mts` — каталог видов камеры.
-- `shared/compositionContract.d.mts` — композиция и элементы.
-- `shared/bottleBrandingContract.d.mts` — декор и ссылка на логотип.
+- `app/shared/renderContract.d.mts` — сборный запрос рендера (версии фич).
+- `app/shared/sceneContract.d.mts` — профиль сцены и ссылка на сцену.
+- `app/shared/skinContract.d.mts` — ссылка на скин, дескриптор, реестр.
+- `app/shared/cameraViewsContract.d.mts` — каталог видов камеры.
+- `app/shared/compositionContract.d.mts` — композиция и элементы.
+- `app/shared/bottleBrandingContract.d.mts` — декор и ссылка на логотип.
 
 ## Договорённости по типам (черновик)
 - Разделять **идентичность** (`id` + `revision` + `sha256`) и **локатор** (`file`/ключ сторейджа):

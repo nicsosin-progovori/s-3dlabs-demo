@@ -4,10 +4,10 @@ _Черновик. Docker-вариант пока НЕ приведён к це�
 
 ## Что поднимается
 Из одного репозитория — два артефакта, в проде это один процесс:
-- **Статический фронтенд** (Vite build → `dist/`): три страницы — `index.html`
+- **Статический фронтенд** (Vite build → `app/dist/`): три страницы — `index.html`
   (студия SOURCE), `bottle.html` (страница бутылки + публичный API), `render.html`
   (невидимый worker для PNG).
-- **Node-сервер** `server/start.mjs`: раздаёт `dist/`, публичный API (`/api/...`),
+- **Node-сервер** `app/server/start.mjs`: раздаёт `app/dist/`, публичный API (`/api/...`),
   рендерит PNG через headless-Chromium (Playwright), хранит логотипы.
 
 ## Требования
@@ -16,21 +16,21 @@ Node ≥ 22 (`.nvmrc` = 22). Для серверного PNG — Chromium Playwr
 
 ## Локальный запуск
 - `npm run dev` — только фронт, HMR → http://127.0.0.1:5173
-- `npm run dev:bottle` — сервер + бутылочный API (`server/start.mjs`)
+- `npm run dev:bottle` — сервер + бутылочный API (`app/server/start.mjs`)
 - `npm run build && npm start` — прод-подобно (`node server/start.mjs --production`);
-  слушает `PORT` (деф. 5180), `HOST` (деф. 127.0.0.1); **требует собранный `dist`**.
+  слушает `PORT` (деф. 5180), `HOST` (деф. 127.0.0.1); **требует собранный `app/dist`**.
 - `npm run setup:browser` — поставить Chromium для тестов.
 - Env: `PORT`, `HOST`, `BOTTLE_ALLOWED_ORIGINS` (CORS allowlist), `NODE_OPTIONS`.
 
 ## На любом сервере (как сейчас)
-Собрать `dist` → перенести `dist/ server/ shared/ config/ models/` + `package.json`
+Собрать `app/dist` → перенести `app/dist/ server/ shared/ config/ models/` + `package.json`
 + lock → `npm ci --omit=dev` → `node server/start.mjs --production` за reverse-proxy
 (TLS терминируется снаружи). Текущий прод — Selectel: Docker + systemd
 (`ops/selectel/3dlabs.service`) + nginx + certbot (см. `docs/SELECTEL_DEPLOYMENT.md`).
 
 ## Docker — текущее состояние (как есть)
 `ops/selectel/Dockerfile`: база Playwright, `npm ci --omit=dev`, копирует заранее
-собранный `dist` + `server/shared/config/models`, healthcheck `/api/health`,
+собранный `app/dist` + `app/server/shared/config/models`, healthcheck `/api/health`,
 порт 5180. Работает, но заточен под один таргет и не самодостаточен:
 - лежит в `ops/selectel/`, а не в корне → образ воспринимается как
   деплой-специфичный, а не как базовый артефакт продукта;
@@ -44,7 +44,7 @@ Node ≥ 22 (`.nvmrc` = 22). Для серверного PNG — Chromium Playwr
 вынести всю DevOps-часть в одну осознанную папку (предлагаю `ops/`), чтобы было
 явно видно, что и как поднимается и что для этого нужно:
 1. `ops/docker/Dockerfile` — multi-stage: `builder` (node:22) `npm ci && npm run
-   build`; `runtime` (образ Playwright) копирует `dist` + `server/shared/config/
+   build`; `runtime` (образ Playwright) копирует `app/dist` + `app/server/shared/config/
    models`, `npm ci --omit=dev`. Собирается из чистого клона.
 2. `ops/docker/docker-compose.yml` — локальный `docker compose up`, env + volume под
    логотипы/результаты. `.dockerignore` — относительно контекста сборки

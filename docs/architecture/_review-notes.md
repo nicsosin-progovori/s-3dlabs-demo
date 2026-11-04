@@ -26,3 +26,40 @@ _Собираем по ходу прохода по `README.md`. Выводы �
 ## Уточнение по Docker/DevOps (от владельца)
 - Всю DevOps-часть вынести в **одну осознанную папку** (предложено `ops/`): видно, что и как поднимается и что нужно.
 - Предложенная структура: `ops/docker/` (общий образ + compose) + `ops/<target>/` (оверлей systemd/nginx/certbot). Файлы пока НЕ создаём — сначала ревью.
+
+## Решения по DevOps/топологии (от владельца)
+- Идём **School B**: devops сверху, приложение в подпапку (`app/`), прод + масштабирование.
+- Рендер — **два сервиса**: `web` (dist + delivery API + оркестрация) и `renderer` (Node+Chromium, эфемерные воркеры).
+- Факт из кода: сейчас web+renderer слиты, Chromium грузит `render.html`/ассеты по общему origin — при разделении решить путь ассетов (по сети из web / своя копия dist).
+- Нужна инфра-схема окружения → сделана в `environment.md` (+ картинки). Далее: сегментация и план миграции `app/`.
+
+## Решения/уточнения (телефонный заход)
+- Vite — только dev/сборка; «контейнер под Vite» = builder-стадия; прод без dev-части работает при готовом dist. Зафиксировано в migration-plan.
+- Имя подпапки приложения — `app/` (не Next.js; Vite React + Node API).
+- Reverse proxy + TLS — только оснастка в `ops/`, в dev не нужен.
+- Renderer переопределён: **асинхронная галерея** (не онлайн-рендер) → `rendering-async.md`.
+- index.html (App, мультипродукт) vs bottle.html (BottleApiPage, эталон одного продукта с API/PNG). Цель — слить в один динамический плеер (Фаза 4), зависит от per-product адаптеров.
+- Планы разложены по фазам с точками проверки в `migration-plan.md`. Реализация — по команде владельца с компьютера.
+
+## Фаза 1 запущена (владелец за ПК, развилки отвечены)
+- Развилки: (1) renderer — своя копия dist (TODO ревью: сеть из web); (2) polling — заглушка + TODO; (3) очередь in-process + volume на старте.
+- Создано (код не трогали, git не коммитили): `ops/docker/` (Dockerfile multi-stage, compose web+renderer+edge-proxy, nginx.conf, .env.example, Dockerfile.dockerignore), `ops/bin/` (up/build/sh/logs/test), `ops/README.md`.
+- Точка проверки 1: `ops/bin/up` → web :5180 + renderer :5181, оба `/api/health` ок, страница грузится, рендер PNG работает; `ops/bin/test` зелёный. Ждём результат проверки владельцем.
+
+## Точка проверки 1 — ЗЕЛЁНАЯ
+- `ops/bin/test`: 71/71 юнит-тестов прошли (в контейнере, стадия deps). Контейнеры web:5180 + renderer:5181 поднимаются.
+- bin пополнен: start (= up -d), stop (down). Dockerfile получил стадию deps.
+- Фаза 2 расписана детально в migration-plan.md; ждём «go» и 2 решения (assets/.nojekyll; Claude outputs).
+
+## Фаза 2 выполнена локально (ждёт проверки)
+- Приложение перенесено в `app/` (mv, история сохранится при коммите владельца). В корне: app/ ops/ docs/ README.md AGENTS.md .gitignore .idea.
+- Удалены устаревшие GH Pages-артефакты: `assets/` (5 файлов, были в git), `.nojekyll`. Схемы перенесены в `docs/architecture/diagrams/`; «Claude outputs/» убрана, добавлена в .gitignore.
+- Правки: ops/docker/Dockerfile (COPY app/*), Dockerfile.dockerignore (**/node_modules|dist|.cache), пути в доках (src/→app/src и т.п.), ops/selectel/Dockerfile помечен DEPRECATED, ops/README dev-команды из app/.
+- Относительные пути (vite/tsconfig/server root/playwright/скрипты) править не пришлось — переехали вместе.
+- НЕ трогали (историческое): root README пути, SELECTEL_DEPLOYMENT scope_paths — опциональный follow-up.
+- Точка проверки 2 у владельца: ops/bin/up (пересборка) → health; ops/bin/test зелёный; /bottle.html + PNG; dev из app/.
+
+## Dev-контейнер с синхронизацией
+- Добавлена стадия `dev` (Playwright base + полные зависимости) и сервис `dev` (профиль dev) в compose.
+- bind-mount `app/ ↔ контейнер` (исходники и app/dist синхронны с хостом); `node_modules`/`.cache` — в named volumes (не на хост: платформенные бинарники), в git не идут.
+- Запуск: `ops/bin/dev docker`. HMR через CHOKIDAR_USEPOLLING. web/renderer сборки получили явный target: runtime.

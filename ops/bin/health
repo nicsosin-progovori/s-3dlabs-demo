@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -uo pipefail
+# Проверка здоровья обоих сервисов. Порты можно переопределить env-переменными.
+HOST="${HEALTH_HOST:-127.0.0.1}"
+WEB_PORT="${WEB_PORT:-5180}"
+RENDERER_PORT="${RENDERER_PORT:-5181}"
+fail=0
+check() {
+  local name="$1" port="$2" body
+  body="$(curl -fsS -m 5 "http://${HOST}:${port}/api/health" 2>/dev/null)"
+  if [ -n "$body" ]; then
+    echo "✓ ${name} (:${port}) ${body}"
+  else
+    echo "✗ ${name} (:${port}) — нет ответа"
+    fail=1
+  fi
+}
+check web "$WEB_PORT"
+check renderer "$RENDERER_PORT"
+exit "$fail"

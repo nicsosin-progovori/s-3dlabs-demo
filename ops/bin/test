@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$DIR/../.." && pwd)"
+# Юнит-тесты гоняем В КОНТЕЙНЕРЕ (стадия deps: полные зависимости + исходники),
+# чтобы не зависеть от node_modules на хосте. Первый прогон соберёт образ (npm ci).
+docker build -f "$REPO/ops/docker/Dockerfile" --target deps -t s-3dlabs:test "$REPO"
+exec docker run --rm s-3dlabs:test npm run test:unit

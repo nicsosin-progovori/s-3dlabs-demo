@@ -97,19 +97,42 @@ low-пакет около 196 КБ, затем оптимизированный 
 
 ## Запуск
 
+Приложение — в `app/`, DevOps-оснастка — в `ops/`, документация — в `docs/`.
+Подробнее: [`ops/README.md`](ops/README.md), [`docs/setup/`](docs/setup/README.md).
+
+### Команды (пульт `ops/bin/`, запускать из корня репозитория)
+
+| Команда | Что делает |
+| --- | --- |
+| `ops/bin/up` | Собрать образ и поднять web (:5180) + renderer (:5181), приоритетный режим |
+| `ops/bin/start` | То же в фоне (= `up -d`) |
+| `ops/bin/stop` | Остановить и убрать контейнеры/сеть (volume `uploads` сохраняется) |
+| `ops/bin/build` | Пересобрать образ |
+| `ops/bin/rebuild [svc]` | Пересобрать образ и переката́ть в поднятый демон (в фоне); рабочий цикл при изменениях кода |
+| `ops/bin/health` | Проверить `/api/health` обоих сервисов |
+| `ops/bin/dev` | Dev на хосте (Node ≥22; при первом запуске сам `npm ci`) → :5180 |
+| `ops/bin/dev front` | Dev на хосте, только фронт с HMR → :5173 |
+| `ops/bin/dev docker` | Dev в контейнере с синхронизацией `app/` ↔ контейнер; в фоне; сначала останавливает web/renderer (:5180), печатает статус и логи |
+| `ops/bin/sh [web\|renderer]` | Зайти внутрь контейнера |
+| `ops/bin/logs [svc]` | Логи сервиса (follow) |
+| `ops/bin/test` | Юнит-тесты в контейнере (стадия `deps`) |
+
+Единый вход через локальный прокси (роутинг `/api/render` → renderer):
+`docker compose -f ops/docker/docker-compose.yml --profile edge up` → `http://127.0.0.1:8080`.
+
+### Dev на хосте без пульта
 ```bash
-cd /Users/nsosin/Projects/source-3d/.cache/github-pages/s-3dlabs-demo
-npm run dev:bottle
+cd app
+npm ci                   # Node ≥22 (.nvmrc=22)
+npm run dev:bottle       # сервер + API + рендер → http://127.0.0.1:5180/bottle.html
+# npm run dev            # только фронт → http://127.0.0.1:5173
+# npm run setup:browser  # разово, если нужен серверный PNG (Chromium)
 ```
 
-Новая бутылка с серверным PNG — <http://127.0.0.1:5180/bottle.html>.
-Прежний каталог — <http://127.0.0.1:5180/>; параметры `?model=endo`,
-`?model=pillow`, `?model=mug`, `?model=pen`, `?model=notebook` выбирают товар.
-Сервер доступен только на этом компьютере. Остановка — `Ctrl+C` в его терминале.
-Для прежнего frontend без API сохранён `npm run dev` на порту 5173.
-Родительская папка содержит исходную разработку; текущая ветка находится в checkout выше.
+Страницы: `/bottle.html` — одна бутылка + публичный API + серверный PNG; `/` —
+мультипродукт-студия (`?model=endo|pillow|mug|pen|notebook`). Зависимости
+зафиксированы в `app/package-lock.json` (`npm ci`), требуется Node.js ≥ 22.12.
 
-Зависимости установлены в `node_modules/`, версии зафиксированы в `package-lock.json`. Восстановление: `npm ci`. Требуется Node.js 22.12 или новее; проверен Node.js 22.23.3.
 
 ## Контроль качества кода — 2 ноября 2026
 

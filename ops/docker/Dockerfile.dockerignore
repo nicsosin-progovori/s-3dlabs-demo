@@ -1,0 +1,13 @@
+# BuildKit читает этот файл для ops/docker/Dockerfile. Контекст — корень репозитория.
+.git
+.idea
+docs
+ops
+assets
+*.log
+**/node_modules
+**/dist
+**/.cache
+**/test-results
+**/playwright-report
+# app/tests НЕ игнорируем — нужны стадии deps для юнит-тестов.

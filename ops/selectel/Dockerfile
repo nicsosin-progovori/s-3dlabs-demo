@@ -1,3 +1,4 @@
+# DEPRECATED (Фаза 2): заменён на ops/docker/. Оставлен как справка по таргету Selectel.
 ARG PLAYWRIGHT_IMAGE=mcr.microsoft.com/playwright:v1.64.1-noble
 FROM ${PLAYWRIGHT_IMAGE}
 ENV NODE_ENV=production PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 PORT=5180 HOST=0.0.0.0 \

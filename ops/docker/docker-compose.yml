@@ -1,0 +1,71 @@
+name: s-3dlabs
+
+# Прод-подобно: web (dist+API) + renderer (Node+Chromium) из одного образа.
+# Dev: сервис `dev` (профиль dev) — сборка в контейнере, исходники и app/dist
+# синхронизируются с локальным проектом через bind-mount; node_modules/кеши — в volume
+# (нативные бинарники Linux несовместимы с хостом, поэтому НЕ на хост).
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      target: runtime
+    image: s-3dlabs:latest
+    environment:
+      PORT: 5180
+      HOST: 0.0.0.0
+      BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
+      NODE_OPTIONS: ${WEB_NODE_OPTIONS:-}
+    ports: ["5180:5180"]
+    volumes: ["uploads:/app/.cache/uploads"]
+    restart: unless-stopped
+
+  renderer:
+    image: s-3dlabs:latest
+    depends_on: [web]
+    environment:
+      PORT: 5181
+      HOST: 0.0.0.0
+      BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
+      NODE_OPTIONS: ${RENDERER_NODE_OPTIONS:-}
+    ports: ["5181:5181"]
+    volumes: ["uploads:/app/.cache/uploads"]
+    init: true
+    shm_size: "1gb"
+    restart: unless-stopped
+
+  # Dev с синхронизацией в локальный проект. Поднять: docker compose --profile dev up
+  # (или ops/bin/dev docker). Правишь в app/ на хосте — контейнер подхватывает (HMR).
+  dev:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      target: dev
+    image: s-3dlabs:dev
+    profiles: ["dev"]
+    environment:
+      PORT: 5180
+      HOST: 0.0.0.0
+      CHOKIDAR_USEPOLLING: "true"   # надёжный watch через bind-mount (особенно macOS)
+    ports: ["5180:5180"]
+    volumes:
+      - ../../app:/app                 # ← синхронизация исходников и app/dist с хостом
+      - dev_node_modules:/app/node_modules  # ← не на хост (платформенные бинарники)
+      - dev_cache:/app/.cache
+    init: true
+    shm_size: "1gb"
+    command: sh -c "mkdir -p .cache/uploads/logos && exec npm run dev:bottle"
+
+  proxy:
+    image: nginx:1.27-alpine
+    profiles: ["edge"]
+    depends_on: [web, renderer]
+    ports: ["8080:80"]
+    volumes: ["./nginx.conf:/etc/nginx/nginx.conf:ro"]
+    restart: unless-stopped
+
+volumes:
+  uploads:
+  dev_node_modules:
+  dev_cache:

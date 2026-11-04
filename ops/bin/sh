@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+svc="${1:-web}"
+exec docker compose -f "$DIR/../docker/docker-compose.yml" exec "$svc" sh

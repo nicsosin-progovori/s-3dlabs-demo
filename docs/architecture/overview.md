@@ -27,14 +27,14 @@ TypeScript 7 · Node ≥22. Серверный PNG — headless-Chromium чер�
 GitHub Pages.
 
 ## Точки входа
-- `index.html` → `src/main.tsx` → `App` → единая студия SOURCE.
-- `bottle.html` → `src/BottleApiPage.tsx` → страница одной бутылки + публичный API + PNG.
-- `render.html` → `src/BottleRenderWorker.tsx` → невидимый worker для PNG.
+- `index.html` → `app/src/main.tsx` → `App` → единая студия SOURCE.
+- `bottle.html` → `app/src/BottleApiPage.tsx` → страница одной бутылки + публичный API + PNG.
+- `render.html` → `app/src/BottleRenderWorker.tsx` → невидимый worker для PNG.
 
 ## Слои кадра (термины)
 1) модель/геометрия (LOD) · 2) скин/материал · 3) камера · 4) сцена ·
 5) композиция · 6) брендинг/декор. Плюс рендерер — исполнитель контракта (не слой).
-Каждый слой = версионированный контракт (`shared/*.mjs` + `.d.mts`) + рантайм-JSON,
+Каждый слой = версионированный контракт (`app/shared/*.mjs` + `.d.mts`) + рантайм-JSON,
 читаемый одинаково клиентом и серверным PNG (sha256-parity).
 
 ## Фокус
