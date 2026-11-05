@@ -1,0 +1,141 @@
+{
+  "sourceMaster": "/Users/nsosin/Projects/source-3d/models/bottle/prepared-v02.blend",
+  "sourceMasterSha256": "aa2ce9609345cfa92250473b8e6eb0a89043f731c615082ddf8a505c7e9624ec",
+  "highGlbSha256": "da4605b3ff36ed622262c9499ad21996b70a604f2fa3e6a19669eada895e6c3f",
+  "highBytes": 5816648,
+  "glbSha256": "467a8b87ff21a13b1dcfd050fa4badb789d2cb28cbc91ddd44d4288635c55b3a",
+  "bytes": 191392,
+  "sourceFile": "prepared-low-v01.blend",
+  "radialSegments": 48,
+  "profileToleranceMm": 0.08,
+  "detailProfileToleranceMm": 0.2,
+  "detailRadialSegments": [
+    24,
+    32
+  ],
+  "units": "metres",
+  "canonicalFrame": "glTF Y-up, front +Z; original pivots and UVs",
+  "storedStates": [
+    "closed"
+  ],
+  "runtimeStates": [
+    "closed",
+    "open",
+    "lying"
+  ],
+  "triangles": 6082,
+  "meshes": [
+    {
+      "name": "BaseRim",
+      "before": 1152,
+      "after": 128
+    },
+    {
+      "name": "BottleBodyDecoration",
+      "before": 4608,
+      "after": 288
+    },
+    {
+      "name": "InternalSteelThread",
+      "before": 3840,
+      "after": 480
+    },
+    {
+      "name": "BambooTopDecoration",
+      "before": 2,
+      "after": 2
+    },
+    {
+      "name": "CapThreadDetail",
+      "before": 2560,
+      "after": 430
+    },
+    {
+      "name": "HandlePivotRivet",
+      "before": 528,
+      "after": 94
+    },
+    {
+      "name": "HandlePivotRivet.001",
+      "before": 528,
+      "after": 94
+    },
+    {
+      "name": "LidBambooTop",
+      "before": 3072,
+      "after": 384
+    },
+    {
+      "name": "LidSiliconeSeal",
+      "before": 4608,
+      "after": 192
+    },
+    {
+      "name": "LidSiliconeSeal.001",
+      "before": 4608,
+      "after": 192
+    },
+    {
+      "name": "LidSteelCollar",
+      "before": 4992,
+      "after": 512
+    },
+    {
+      "name": "LidThreadPlug",
+      "before": 3456,
+      "after": 336
+    },
+    {
+      "name": "SteelCarryHandle",
+      "before": 1320,
+      "after": 198
+    },
+    {
+      "name": "SteelNeckAndInnerWall",
+      "before": 10752,
+      "after": 1024
+    },
+    {
+      "name": "VacuumBottleBody",
+      "before": 16512,
+      "after": 1728
+    }
+  ],
+  "images": [
+    {
+      "name": "BambooFibresNormal",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "name": "BambooFibresRoughness",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "name": "BrushedSteelNormal",
+      "width": 64,
+      "height": 32
+    },
+    {
+      "name": "BrushedSteelRoughness",
+      "width": 64,
+      "height": 32
+    },
+    {
+      "name": "NaturalBambooColour",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "PowderCoatNormal",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "name": "PowderCoatRoughness",
+      "width": 64,
+      "height": 64
+    }
+  ]
+}

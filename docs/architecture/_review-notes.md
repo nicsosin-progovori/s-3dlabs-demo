@@ -99,3 +99,16 @@ _Собираем по ходу прохода по `README.md`. Выводы �
 - http://scena.develop — не secure context (не loopback) → window.crypto.subtle undefined → проверки SHA-256 в skinLoader/sceneLoader бросают → скин/сцена не грузятся, текстуры не запрашиваются (0). На 127.0.0.1 работает (secure context).
 - Решение (выбран вариант 2): HTTPS на прокси. Самоподписанный cert ops/docker/certs/scena.develop.pem (SAN scena.develop/localhost/127.0.0.1), nginx 443 ssl + 80→443 редирект, compose публикует 443 + монтирует certs. certs в .gitignore.
 - Доступ: https://scena.develop; cert доверить в Keychain (или проскочить предупреждение — secure context всё равно включается).
+
+## Окружения как start-режимы + видимое состояние + версии прода
+- ops/bin/start [dev|test|production], dev по умолчанию. dev — HMR-контейнер (:5180, localhost); test — юнит-тесты; production — сборка + тег образа = git-sha + запись в ops/releases.log + web+renderer+proxy на https://домен.
+- Запуск конкретной версии: ops/bin/start production <sha> (IMAGE_TAG=<sha>, без пересборки). compose: image: s-3dlabs-web/renderer:${IMAGE_TAG:-latest}.
+- Состояние вынесено в видимую папку volumes/ (bind → /app/.cache/uploads у web/renderer/dev); в git только volumes/README.md.
+- Факты для владельца: .env — dotfile (есть, скрыт IDE); app/dist на хосте нет (собирается в образе) — это норма; мусора нет.
+- dev=localhost (secure context ok), production=домен по HTTPS.
+
+## Шаг 1 externalization сделан
+- Собран objects/bottle/v01/ (копия ассетов студии; студия не тронута): geometry/skins/textures/scene/camera/spec + manifest.json (39 файлов, sha+size, 8.7M).
+- git: objects/**/*.glb и *.png игнорируются (бинарники не дублируем), манифесты/json видны.
+- Архитектура в docs/architecture/objects.md. iframe-направление снято (не цель владельца).
+- Дальше: шаг 2 — рантайм-загрузчик по ID (читает manifest, грузит, рендерит).

@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# edge свёрнут в start: прокси теперь всегда в стеке (домен scena.develop).
-echo "ℹ edge свёрнут в start — прокси теперь поднимается всегда."
-exec "$DIR/start" "$@"
+exec "$DIR/start" production "$@"

@@ -1,37 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-mode="${1:-bottle}"
-
-if [ "$mode" = "docker" ]; then
-  COMPOSE=(docker compose -f "$DIR/../docker/docker-compose.yml")
-  # Dev — отдельный режим «вместо» web/renderer; освобождаем порт 5180.
-  echo "→ останавливаю web/renderer (если подняты), чтобы освободить порт…"
-  "${COMPOSE[@]}" down --remove-orphans >/dev/null 2>&1 || true
-  echo "→ поднимаю dev в фоне (синхронизация app/ ↔ контейнер)…"
-  "${COMPOSE[@]}" --profile dev up --build -d dev
-  sleep 2
-  echo "--- статус ---"; "${COMPOSE[@]}" ps
-  echo "--- логи dev (последние 40) ---"; "${COMPOSE[@]}" logs --tail=40 dev
-  echo ""
-  echo "→ http://127.0.0.1:5180/bottle.html"
-  echo "   логи вживую: ops/bin/logs dev   |   стоп: ops/bin/stop"
-  exit 0
-fi
-
-# Иначе — dev на хосте.
-APP="$(cd "$DIR/../../app" && pwd)"; cd "$APP"
-if command -v node >/dev/null 2>&1; then
-  major="$(node -p 'process.versions.node.split(".")[0]')"
-  [ "$major" -ge 22 ] || echo "⚠ Нужен Node ≥22 (.nvmrc=22), сейчас $(node -v)"
-else
-  echo "✗ Node не найден в PATH"; exit 1
-fi
-[ -d node_modules ] || { echo "→ node_modules нет — ставлю (npm ci)…"; npm ci; }
-[ -d .cache/playwright ] || echo "ℹ Для серверного PNG один раз: cd app && npm run setup:browser"
-if [ "$mode" = "front" ]; then
-  echo "→ dev (только фронт): http://127.0.0.1:5173"; exec npm run dev
-else
-  echo "→ dev:bottle (сервер + API + рендер): http://127.0.0.1:5180/bottle.html"; exec npm run dev:bottle
-fi
+exec "$DIR/start" dev "$@"

@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "id": "bottle",
+  "revision": "v01",
+  "label": {
+    "de": "Isolierflasche",
+    "en": "Insulated bottle"
+  },
+  "created": "2026-11-05",
+  "note": "Самодостаточный пакет объекта. Движок грузит его по ключу id@revision и интерпретирует. Пока это КОПИЯ ассетов студии (app/); студия не тронута.",
+  "parts": {
+    "geometry": [
+      {
+        "file": "geometry/bottle-geometry-final-v01.glb",
+        "bytes": 506284,
+        "sha256": "81fc7b5299433f03a546967a375cb88b94d40158b01fc0820c6c38efe67b1556"
+      },
+      {
+        "file": "geometry/bottle-geometry-low-v01.glb",
+        "bytes": 157476,
+        "sha256": "528b4e48f976240c5c3d5e8e33dc8b8c832dc02766b28577b354c812d4b8f909"
+      },
+      {
+        "file": "geometry/bottle-hq-v01.glb",
+        "bytes": 1340356,
+        "sha256": "0baee6d5b067e63ecbc7849b9af3358fca85ab58c5980efac4fa3f42caaab8fd"
+      },
+      {
+        "file": "geometry/bottle-low-v01.glb",
+        "bytes": 191392,
+        "sha256": "467a8b87ff21a13b1dcfd050fa4badb789d2cb28cbc91ddd44d4288635c55b3a"
+      },
+      {
+        "file": "geometry/bottle.glb",
+        "bytes": 5816648,
+        "sha256": "da4605b3ff36ed622262c9499ad21996b70a604f2fa3e6a19669eada895e6c3f"
+      },
+      {
+        "file": "geometry/geometry.json",
+        "bytes": 1254,
+        "sha256": "225f74b486edbe0539f3b9a102c0fec9f4f550bdd1fc9cdf9f76f8f7c4f9c38a"
+      },
+      {
+        "file": "geometry/hq-v01-geometry.json",
+        "bytes": 1806,
+        "sha256": "c273b18cf51a5c8de2dd13c80995d606103d919643e3b6efe93b6724b4f9be1b"
+      },
+      {
+        "file": "geometry/hq-v01.json",
+        "bytes": 4230,
+        "sha256": "db48a01eeaf1547b757cca058a061d42923b8c7913c8a836af6f966f98cd4087"
+      },
+      {
+        "file": "geometry/low-v01.json",
+        "bytes": 2756,
+        "sha256": "bb8de841a1a470b82be60436198029550536d73e1f87a2f1a13b115d62c96661"
+      },
+      {
+        "file": "geometry/skin-delivery-v01.json",
+        "bytes": 14430,
+        "sha256": "a02bb85170d906c03655dccdd3839b744a247a40ed7b844e091072c73692ccbf"
+      }
+    ],
+    "skins": [
+      {
+        "file": "skins/bottle-green/v01/skin.json",
+        "bytes": 6697,
+        "sha256": "38d80b9b21ba2382b24dfb576be00ce495007d1bbb1263a475ab7adc543d70d2"
+      },
+      {
+        "file": "skins/bottle-turquoise/v01/skin.json",
+        "bytes": 6699,
+        "sha256": "05edfbec99b068b05b2b31de8d445576a8b9c417b2faf993c4982683735110bb"
+      },
+      {
+        "file": "skins/bottle-navy/v01/skin.json",
+        "bytes": 6696,
+        "sha256": "d2b72a095e34b287075d99adc5d85b49ef183a6c23e6b667b722a48bc632bade"
+      },
+      {
+        "file": "skins/bottle-silver/v01/skin.json",
+        "bytes": 6715,
+        "sha256": "d57c5628e6109d2bf17a97628827c54179737bb1b793fe9fc0985916fe124aba"
+      },
+      {
+        "file": "skins/bottle-red/v01/skin.json",
+        "bytes": 6694,
+        "sha256": "8d348637b83e945ff2259ae94bf2d983ab57da7ec247910ebffe756e12d5b0fa"
+      },
+      {
+        "file": "skins/bottle-white/v01/skin.json",
+        "bytes": 6709,
+        "sha256": "77329edc2fa9498c1b931d9fc108acb2814b0b9879f040fc4bd709693748882a"
+      },
+      {
+        "file": "skins/bottle-black/v01/skin.json",
+        "bytes": 6699,
+        "sha256": "609635551ed98df2c23abbfb1461fa8e2feb4e3c4aa4b076f41eb8a25a232429"
+      },
+      {
+        "file": "skins/bottle-orange/v01/skin.json",
+        "bytes": 6697,
+        "sha256": "54e5a2e61944a1da878f1e7b6db6fe6ffd7a51f906709ec52b7ba98285b2cf0a"
+      },
+      {
+        "file": "skins/bottle-blue/v01/skin.json",
+        "bytes": 6696,
+        "sha256": "13b2c5dc13b3909d833632c04c046d2decb2d546825a2c1a07ee2b2902318322"
+      }
+    ],
+    "textures": [
+      {
+        "file": "textures/0c1a21ace4b03f7dcc75b337e1bffd42778cf1d51261484b3f41c0ccbe495c62.png",
+        "bytes": 3241,
+        "sha256": "0c1a21ace4b03f7dcc75b337e1bffd42778cf1d51261484b3f41c0ccbe495c62"
+      },
+      {
+        "file": "textures/11bee5f69625060f5274e771f9339154ef377f1d5f3afc8466babf7d8e528903.png",
+        "bytes": 155539,
+        "sha256": "11bee5f69625060f5274e771f9339154ef377f1d5f3afc8466babf7d8e528903"
+      },
+      {
+        "file": "textures/4b3e50413c4c5178a85e58e94dee8b5b79407e5e58deabe83bef4ec81253a8cc.png",
+        "bytes": 178355,
+        "sha256": "4b3e50413c4c5178a85e58e94dee8b5b79407e5e58deabe83bef4ec81253a8cc"
+      },
+      {
+        "file": "textures/6531ff127d1aebe34a9af4f590ec3bf6847659799c0e3bd9de7f6f7a4d6631eb.png",
+        "bytes": 263549,
+        "sha256": "6531ff127d1aebe34a9af4f590ec3bf6847659799c0e3bd9de7f6f7a4d6631eb"
+      },
+      {
+        "file": "textures/6bee5c8866dd568853916d3d04e3a7c5c9b4167a2790fcd1d549e08ac914e0e5.png",
+        "bytes": 6746,
+        "sha256": "6bee5c8866dd568853916d3d04e3a7c5c9b4167a2790fcd1d549e08ac914e0e5"
+      },
+      {
+        "file": "textures/77597c5feccac588bb99952520027d4e7096898a8b6739c054c11ce794a2b754.png",
+        "bytes": 99655,
+        "sha256": "77597c5feccac588bb99952520027d4e7096898a8b6739c054c11ce794a2b754"
+      },
+      {
+        "file": "textures/7d7e1a193dab3601cfd1523852223364981c865328db20435b63285306ec30c8.png",
+        "bytes": 21092,
+        "sha256": "7d7e1a193dab3601cfd1523852223364981c865328db20435b63285306ec30c8"
+      },
+      {
+        "file": "textures/8904b444c69c6ce751434fb5ca83387decc480a02e81794ed4cfe357092017ba.png",
+        "bytes": 597,
+        "sha256": "8904b444c69c6ce751434fb5ca83387decc480a02e81794ed4cfe357092017ba"
+      },
+      {
+        "file": "textures/97a4177b737cb196ddec513ed74be2d06cd4f5dc5d9473cab37fe5ffbd8f1877.png",
+        "bytes": 25071,
+        "sha256": "97a4177b737cb196ddec513ed74be2d06cd4f5dc5d9473cab37fe5ffbd8f1877"
+      },
+      {
+        "file": "textures/a1ac223a63b4a1dd42c49ae452313c44c469daa0db8ed1b4231765fa41b84264.png",
+        "bytes": 88870,
+        "sha256": "a1ac223a63b4a1dd42c49ae452313c44c469daa0db8ed1b4231765fa41b84264"
+      },
+      {
+        "file": "textures/a2da1b4b6dc4cabd443cb0511ab2a0aa60bd38073ee58da1aabb509c5e10fdb7.png",
+        "bytes": 15129,
+        "sha256": "a2da1b4b6dc4cabd443cb0511ab2a0aa60bd38073ee58da1aabb509c5e10fdb7"
+      },
+      {
+        "file": "textures/b69b09fb57f7ab1d6feeb44dbd0ad5d02e79075b6b4474ba41c9130b73c1fd36.png",
+        "bytes": 1298,
+        "sha256": "b69b09fb57f7ab1d6feeb44dbd0ad5d02e79075b6b4474ba41c9130b73c1fd36"
+      },
+      {
+        "file": "textures/bc515e9027f364a77dcfe49da9fa28b3bd75135519a83f1c56a491d5f8c676e5.png",
+        "bytes": 1722,
+        "sha256": "bc515e9027f364a77dcfe49da9fa28b3bd75135519a83f1c56a491d5f8c676e5"
+      },
+      {
+        "file": "textures/c5dde1ebf73db6744d612af60acb1417cc21fbe563e796654506dba8e10a0736.png",
+        "bytes": 3254,
+        "sha256": "c5dde1ebf73db6744d612af60acb1417cc21fbe563e796654506dba8e10a0736"
+      }
+    ],
+    "scene": [
+      {
+        "file": "scene/default.json",
+        "bytes": 49,
+        "sha256": "02e4fe70684fa56fa09689c6e1c4f9aaa566060137450d302ff090b3fe342309"
+      },
+      {
+        "file": "scene/source-studio/v01/scene.json",
+        "bytes": 2623,
+        "sha256": "916f4759156dffcf2a98c3bfb93eccf0da7499d92b20325f7da7cd561741ebd4"
+      },
+      {
+        "file": "scene/source-studio/v02/scene.json",
+        "bytes": 2621,
+        "sha256": "e5252c624c9b45070aa7f6c2395e314aaeaa4a8fb526975055653bb84d896c99"
+      }
+    ],
+    "camera": [
+      {
+        "file": "camera/bottle.json",
+        "bytes": 13914,
+        "sha256": "975a3b5b8843c15ea344480eed48faf29eb3c230841f6d38443207abfd6e1e0d"
+      }
+    ],
+    "spec": [
+      {
+        "file": "spec/SPEC.md",
+        "bytes": 52809,
+        "sha256": "912f05e3c644760e6182dc1fcc8cb485d944a1a42cc685d337e640fdb636d025"
+      },
+      {
+        "file": "spec/specification.json",
+        "bytes": 4055,
+        "sha256": "dba38d756f9bdc56fa96142a70752c3dc0fabd96f5277c09f70e80a49fe8014d"
+      }
+    ]
+  }
+}

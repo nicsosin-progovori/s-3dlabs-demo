@@ -1,5 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Алиас: поднять в фоне (detached).
-exec "$DIR/up" -d "$@"
+ROOT="$(cd "$DIR/../.." && pwd)"
+COMPOSE=(docker compose -f "$DIR/../docker/docker-compose.yml")
+DOMAIN="$(grep -E '^DOMAIN=' "$DIR/../docker/.env" 2>/dev/null | head -1 | cut -d= -f2-)"; DOMAIN="${DOMAIN:-scena.develop}"
+mode="${1:-dev}"
+
+mkdir -p "$ROOT/volumes/uploads/logos"
+# Один режим за раз — гасим предыдущий
+"${COMPOSE[@]}" --profile dev down --remove-orphans >/dev/null 2>&1 || true
+
+case "$mode" in
+  dev)
+    echo "→ DEV (HMR, синхронизация app/): http://127.0.0.1:5180/bottle.html"
+    "${COMPOSE[@]}" --profile dev up --build -d dev
+    "${COMPOSE[@]}" ps
+    ;;
+  test)
+    exec "$DIR/test"
+    ;;
+  prod|production)
+    sha="${2:-$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo untracked)}"
+    export IMAGE_TAG="$sha"
+    if [ -n "${2:-}" ]; then
+      echo "→ PRODUCTION: запуск зафиксированной версии $sha (без пересборки)"
+    else
+      echo "→ PRODUCTION: сборка версии $sha"
+      "${COMPOSE[@]}" build web renderer
+      docker tag "s-3dlabs-web:$sha"      s-3dlabs-web:latest      2>/dev/null || true
+      docker tag "s-3dlabs-renderer:$sha" s-3dlabs-renderer:latest 2>/dev/null || true
+      printf '%s  %s\n' "$(date +%Y-%m-%dT%H:%M:%S%z)" "$sha" >> "$DIR/../releases.log"
+      echo "   зафиксировано в ops/releases.log"
+    fi
+    "${COMPOSE[@]}" up -d web renderer proxy
+    "${COMPOSE[@]}" ps
+    echo "→ https://$DOMAIN  (версия $sha)"
+    ;;
+  *)
+    echo "Использование: ops/bin/start [dev|test|production] [версия]"; exit 1;;
+esac

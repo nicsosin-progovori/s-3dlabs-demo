@@ -11,7 +11,7 @@ services:
       context: ../..
       dockerfile: ops/docker/Dockerfile
       target: web
-    image: s-3dlabs-web:latest
+    image: s-3dlabs-web:${IMAGE_TAG:-latest}
     depends_on: [renderer]
     environment:
       PORT: 5180
@@ -20,7 +20,7 @@ services:
       BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
       NODE_OPTIONS: ${WEB_NODE_OPTIONS:-}
     ports: ["5180:5180"]
-    volumes: ["uploads:/app/.cache/uploads"]
+    volumes: ["../../volumes/uploads:/app/.cache/uploads"]
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
 
   renderer:
@@ -28,14 +28,14 @@ services:
       context: ../..
       dockerfile: ops/docker/Dockerfile
       target: runtime
-    image: s-3dlabs-renderer:latest
+    image: s-3dlabs-renderer:${IMAGE_TAG:-latest}
     environment:
       PORT: 5181
       HOST: 0.0.0.0
       BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
       NODE_OPTIONS: ${RENDERER_NODE_OPTIONS:-}
     ports: ["5181:5181"]
-    volumes: ["uploads:/app/.cache/uploads"]
+    volumes: ["../../volumes/uploads:/app/.cache/uploads"]
     init: true
     shm_size: "1gb"
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
@@ -76,6 +76,5 @@ services:
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
 
 volumes:
-  uploads:
   dev_node_modules:
   dev_cache:

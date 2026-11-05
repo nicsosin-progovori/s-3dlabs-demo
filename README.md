@@ -100,37 +100,41 @@ low-пакет около 196 КБ, затем оптимизированный 
 Приложение — в `app/`, DevOps-оснастка — в `ops/`, документация — в `docs/`.
 Подробнее: [`ops/README.md`](ops/README.md), [`docs/setup/`](docs/setup/README.md).
 
-### Быстрый старт — локальный домен `https://scena.develop`
+### Быстрый старт
 ```
-# 1) один раз: /etc/hosts →  127.0.0.1 scena.develop
-ops/bin/cert       # локальный TLS-сертификат (mkcert, иначе openssl + доверие)
-ops/bin/start      # поднять стек (web+renderer+proxy)
+ops/bin/start            # = dev (по умолчанию): HMR, http://127.0.0.1:5180/bottle.html
+ops/bin/start production  # прод-сборка + версия → https://scena.develop
+ops/bin/stop             # остановить
 ```
-→ открыть **https://scena.develop/bottle.html**
-HTTPS обязателен: без secure context браузер не даёт `crypto.subtle`, и 3D не грузится.
-Напрямую без домена/HTTPS работает `http://127.0.0.1:5180/bottle.html`.
+Dev открывается на `127.0.0.1` (это secure context — `crypto.subtle` работает).
+Прод — на домене по HTTPS (secure context даёт TLS); до первого запуска прода один раз:
+`/etc/hosts → 127.0.0.1 scena.develop` и `ops/bin/cert`.
 
-Домен и порты задаются в `ops/docker/.env` (`DOMAIN`, `EDGE_PORT`, `EDGE_HTTPS_PORT`) — один конфиг для nginx, compose и `ops/bin/cert`; шаблон — `ops/docker/.env.example`.
+### Режимы (`ops/bin/start <режим>`, один за раз)
+- `dev` (по умолчанию) — dev-контейнер с HMR и синхронизацией `app/` → `:5180`;
+- `test` — прогнать юнит-тесты в контейнере, вернуть pass/fail;
+- `production` — собрать образ, **зафиксировать версию** (тег = git-sha, запись в `ops/releases.log`),
+  поднять web+renderer+proxy → `https://scena.develop`.
+Переключение режима само гасит предыдущий. `ops/bin/stop` — остановить всё.
 
-### Режимы запуска (один за раз)
-Все режимы на портах 5180/5181 — взаимоисключающие; «подъёмные» команды сами гасят предыдущий:
-- `ops/bin/start` — демон web+renderer+proxy → `https://scena.develop` (и напрямую `:5180`);
-- `ops/bin/edge` — алиас `start`;
-- `ops/bin/dev docker` — dev-контейнер с синхронизацией `app/`;
-- `ops/bin/dev` — dev на хосте (НЕ docker; сначала `ops/bin/stop`);
-- `ops/bin/rebuild` — применить правки к демону на месте (режим не меняет);
-- `ops/bin/stop` — остановить всё.
+### Версионирование прода
+`ops/bin/start production` собирает образы с тегом = короткий git-sha и пишет строку в
+`ops/releases.log`. Поднять конкретную ранее собранную версию (без пересборки):
+```
+ops/bin/start production <git-sha>
+```
+(Пока образы хранятся локально в Docker; следующий шаг — пуш в реестр = CI.)
 
-### Демон (рабочий цикл)
+### Состояние (данные рантайма)
+Логотипы и результаты лежат в **`volumes/`** (видно в проекте), монтируются в контейнеры
+как `/app/.cache/uploads`. В git содержимое не идёт (только `volumes/README.md`).
+
+### Рабочий цикл прода
 ```
-ops/bin/start          # поднять демон в фоне: web :5180 + renderer :5181
-ops/bin/rebuild        # после правок кода — пересобрать и переката́ть в демон (в фоне)
-ops/bin/health         # проверить оба сервиса
-ops/bin/stop           # остановить
+ops/bin/start production   # собрать+зафиксировать+поднять
+ops/bin/rebuild            # быстро переката́ть правки в текущий прод (без новой версии)
+ops/bin/health             # проверить сервисы
 ```
-Демон on-demand: работает, пока не остановишь; после перезапуска Docker/ПК сам не
-поднимается (нужно авто-поднятие — раскомментируй `restart: unless-stopped` в
-`ops/docker/docker-compose.yml`).
 
 ### Команды (пульт `ops/bin/`, запускать из корня репозитория)
 
