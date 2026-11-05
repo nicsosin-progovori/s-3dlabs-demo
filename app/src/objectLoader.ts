@@ -1,11 +1,23 @@
 /** Движок берёт объект по ключу id@revision из внешнего хранилища objects/.
  *  Никаких compile-time импортов — только рантайм-чтение манифеста и ссылок. */
 export interface ManifestPart { file: string; bytes: number; sha256: string }
+export interface ObjectRender {
+  adapter?: string
+  geometry?: { final?: string; low?: string }
+  states?: string[]
+  defaultState?: string
+  defaultSkin?: string
+  skinsDir?: string
+  scene?: string
+  camera?: string
+  compatibility?: Record<string, string>
+}
 export interface ObjectManifest {
   schemaVersion: number
   id: string
   revision: string
   label?: Record<string, string>
+  render?: ObjectRender
   parts: Record<string, ManifestPart[]>
 }
 export interface LoadedObject { manifest: ObjectManifest; base: string }
@@ -25,6 +37,8 @@ export function partUrl(base: string, file: string, baseUrl: string = location.h
 }
 /** Выбор основного GLB объекта: мастер `<id>.glb`, иначе первый .glb. */
 export function pickGeometryUrl(o: LoadedObject): string {
+  const final = o.manifest.render?.geometry?.final
+  if (final) return partUrl(o.base, final)
   const geo = o.manifest.parts.geometry ?? []
   const master = geo.find(f => f.file.endsWith('/' + o.manifest.id + '.glb')) ?? geo.find(f => f.file.endsWith('.glb'))
   if (!master) throw new Error('Object has no geometry GLB')

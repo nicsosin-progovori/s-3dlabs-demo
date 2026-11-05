@@ -216,5 +216,32 @@
         "sha256": "dba38d756f9bdc56fa96142a70752c3dc0fabd96f5277c09f70e80a49fe8014d"
       }
     ]
+  },
+  "render": {
+    "adapter": "bottle",
+    "units": "metres",
+    "frame": {
+      "up": "Y",
+      "front": "+Z"
+    },
+    "geometry": {
+      "final": "geometry/bottle-geometry-final-v01.glb",
+      "low": "geometry/bottle-geometry-low-v01.glb"
+    },
+    "states": [
+      "closed",
+      "open",
+      "lying"
+    ],
+    "defaultState": "closed",
+    "defaultSkin": "bottle-black@v01",
+    "skinsDir": "skins",
+    "scene": "scene/source-studio/v02/scene.json",
+    "camera": "camera/bottle.json",
+    "compatibility": {
+      "modelId": "bottle",
+      "uvLayout": "bottle-uv-v01",
+      "materialBindings": "bottle-materials-v01"
+    }
   }
 }
