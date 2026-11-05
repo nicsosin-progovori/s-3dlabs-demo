@@ -1,23 +1,20 @@
 import { createRoot } from 'react-dom/client'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls, Environment, Lightformer, ContactShadows } from '@react-three/drei'
-import { ACESFilmicToneMapping, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
+import { OrbitControls, Environment, Lightformer, AccumulativeShadows, RandomizedLight } from '@react-three/drei'
+import { ACESFilmicToneMapping, MathUtils, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
 import { loadObjectManifest } from './objectLoader'
 import { buildFromManifest, type BuiltObject } from './objectEngine'
 
-/* Зоны ответственности помечены "ЗО[...]" — та же легенда, что в objectEngine.ts.
- * Здесь живёт render-оболочка плеера: свет-рига, тени, контролы, крен камеры. */
+/* Зоны ответственности помечены "ЗО[...]" — легенда в objectEngine.ts.
+ * Здесь render-оболочка плеера: свет-рига, тени, контролы, крен камеры. */
 
 async function buildObject(id: string, rev: string, signal: AbortSignal): Promise<BuiltObject> {
   return buildFromManifest(await loadObjectManifest(id, rev), signal)
 }
 
-/** Свет/окружение. ЗО[ОБЪЕКТ]: ВСЕ значения (exposure, ambient, hemisphere, key/fill, боксы
- *  окружения) берутся из сцены объекта. ЗО[СТУДИЯ?]: но САМА обвязка (какой рига, Environment
- *  как софтбоксы, фон '#111', resolution 256) — выбор плеера/студии, не объекта.
- *  ЗО[ВОПРОС]: tone mapping здесь ЖЁСТКО ACESFilmic — это переопределяет scene.toneMapping объекта.
- *  Кто владеет тонмаппингом: объект, студия или плеер? Сейчас — плеер молча ставит ACES. */
+/** Свет/окружение. ЗО[ОБЪЕКТ]: значения из сцены объекта. ЗО[СТУДИЯ?]: сама обвязка — показ.
+ *  ЗО[ВОПРОС]: tone mapping жёстко ACESFilmic (переопределяет scene.toneMapping объекта). */
 function Rig({ p }: { p: any }) {
   const gl = useThree(s => s.gl)
   useLayoutEffect(() => {
@@ -39,15 +36,48 @@ function Rig({ p }: { p: any }) {
           <Lightformer key={i} form="rect" intensity={b.intensity} color={b.color}
             position={b.position} scale={[b.scale?.[0] ?? 2, b.scale?.[1] ?? 2, 1]} />
         ))}
-        {/* ЗО[ПОЛИТИКА]: запасной софтбокс, если объект не привёз окружение. */}
         {boxes.length === 0 && <Lightformer form="rect" intensity={2} position={[0, 4, 2]} scale={[6, 6, 1]} />}
       </Environment>
     </>
   )
 }
 
-/** ЗО[ОБЩЕЕ]: film-roll (крен) — общая математика: поворот up вокруг оси взгляда на roll°.
- *  Орбита всегда с вертикальным up (0,1,0). ЗО[ОБЪЕКТ]: сам угол roll и near/far — из ракурса объекта. */
+/** Студийные тени. ЗО[ОБЪЕКТ]: ВСЕ параметры (frames, scale, position, opacity, color, radius,
+ *  contact, area/contactSamples) — из сцены объекта (scene.shadow). ЗО[СТУДИЯ?]: сама схема
+ *  (AccumulativeShadows + 2 RandomizedLight: «area» по направлению key + «contact» сверху) —
+ *  способ показа; тот же, что в студии (StudioStage). Запекается один раз, при орбите камеры
+ *  не пересчитывается (тень зависит от объекта и света, не от камеры). */
+function StudioShadows({ s, keyPos }: { s: any; keyPos?: number[] }) {
+  if (!s) return null
+  const contact = s.contact ?? 0.22
+  return (
+    <AccumulativeShadows temporal frames={s.frames ?? 48} scale={s.scale ?? 12}
+      position={s.position ?? [0, 0.002, 0]} resolution={s.resolution ?? 1024}
+      opacity={s.opacity ?? 0.5} color={s.color ?? '#242526'}>
+      <RandomizedLight amount={s.areaSamples ?? 8} radius={s.radius ?? 2.8} ambient={0}
+        intensity={Math.PI * (1 - contact)} position={keyPos ?? [-3.8, 6.3, 4.2]}
+        size={5} near={0.1} far={25} mapSize={s.lightMapSize ?? 1024} bias={0.0002} />
+      <RandomizedLight amount={s.contactSamples ?? 4} ambient={1}
+        intensity={Math.PI * contact} position={[0, 6, 0]}
+        size={5} near={0.1} far={25} mapSize={s.lightMapSize ?? 1024} bias={0.0002} />
+    </AccumulativeShadows>
+  )
+}
+
+/** ЗО[ОБЩЕЕ]: лимиты орбиты — та же математика, что в студии (bottleOrbitLimits).
+ *  Держит камеру над полом и ограничивает отдаление. Константы (пол .06, кэп 12) — в системе
+ *  мира ×worldScale. ЗО[ПОЛИТИКА]: это политика плеера (кандидат в слой «студия»). */
+const FLOOR = 0.06
+function orbitLimits(position: Vector3, target: Vector3) {
+  const direction = position.clone().sub(target).normalize(), radius = position.distanceTo(target)
+  const maxDistance = direction.y < 0
+    ? Math.min(Math.max(12, radius * 3), Math.max(radius, (target.y - FLOOR) / -direction.y))
+    : Math.max(12, radius * 3)
+  const maxPolarAngle = Math.acos(MathUtils.clamp((FLOOR - target.y) / maxDistance, -1, 1))
+  return { maxDistance, maxPolarAngle }
+}
+
+/** ЗО[ОБЩЕЕ]: film-roll — поворот up вокруг оси взгляда; орбита всегда с вертикальным up. */
 const DEG = Math.PI / 180
 function CameraFilm({ cam }: { cam: BuiltObject['camera'] }) {
   const camera = useThree(s => s.camera)
@@ -71,32 +101,32 @@ function Viewer() {
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const ctrl = new AbortController()
-    // ЗО[ПОЛИТИКА]: дефолтный объект 'bottle@v01', если не задан ?object= — это удобство плеера.
+    // ЗО[ПОЛИТИКА]: дефолтный объект 'bottle@v01', если не задан ?object= — удобство плеера.
     const q = new URLSearchParams(location.search).get('object') ?? 'bottle@v01'
     const [id, rev = 'v01'] = q.split('@')
     buildObject(id, rev, ctrl.signal)
       .then(b => {
         setBuilt(b); setNote(`${id}@${rev} — ${b.note}`)
-        // ЗО[ОБЪЕКТ]: фон страницы — из background сцены объекта. ЗО[ВОПРОС]: фон = объект или студия?
-        const bg = b.scene?.background
+        const bg = b.scene?.background // ЗО[ВОПРОС]: фон = объект или студия?
         if (bg) document.body.style.background = `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)`
       })
       .catch(e => setError(e?.message ?? String(e)))
     return () => ctrl.abort()
   }, [])
+  const limits = useMemo(() => built ? orbitLimits(new Vector3(...built.camera.position), new Vector3(...built.camera.target)) : null, [built])
   if (error) return <div className="msg err">Объект не загрузился: {error}</div>
-  if (!built) return <div className="msg">{note}</div>
+  if (!built || !limits) return <div className="msg">{note}</div>
   return (
     <>
       <div className="badge">{note}</div>
-      {/* ЗО[ПОЛИТИКА]: dpr [1,2], alpha, shadows — настройки рендера плеера. */}
       <Canvas camera={{ position: built.camera.position, fov: built.camera.fov, near: built.camera.near, far: built.camera.far }} dpr={[1, 2]} gl={{ alpha: true }} shadows>
         <Rig p={built.scene} />
         <primitive object={built.root} />
-        {/* ЗО[ОБЪЕКТ]: opacity/color тени — из сцены. ЗО[ПОЛИТИКА]: scale/blur/resolution — эвристики плеера. */}
-        <ContactShadows position={[built.camera.target[0], 0.001, built.camera.target[2]]} opacity={built.scene?.shadow?.opacity ?? 0.5} scale={built.shadowScale} blur={2.5} far={built.shadowScale} resolution={1024} color={built.scene?.shadow?.color ?? '#000000'} />
-        {/* ЗО[ПОЛИТИКА]: свободная орбита без лимитов — выбор плеера (в студии лимиты другие). */}
-        <OrbitControls makeDefault target={built.camera.target} />
+        <StudioShadows s={built.scene?.shadow} keyPos={built.scene?.key?.position} />
+        {/* ЗО[ПОЛИТИКА]: лимиты орбиты как в студии — pan выкл., приближение/отдаление и угол над полом ограничены. */}
+        <OrbitControls makeDefault enablePan={false} enableDamping dampingFactor={0.13} rotateSpeed={0.65}
+          minDistance={0.6} maxDistance={limits.maxDistance} minPolarAngle={0.08} maxPolarAngle={limits.maxPolarAngle}
+          target={built.camera.target} />
         <CameraFilm cam={built.camera} />
       </Canvas>
     </>

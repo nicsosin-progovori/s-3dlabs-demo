@@ -53,6 +53,8 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal): P
   // ЗО[ОБЩЕЕ]: правило «спрятать меши по флагам» — общее; СПИСОК флагов везёт объект (render.hide).
   const hide: string[] = r.hide ?? []
   if (hide.length) root.traverse(x => { if (hide.some(flag => (x as any).userData?.[flag])) x.visible = false })
+  // ЗО[ОБЩЕЕ]: меши объекта кастуют/принимают тени — общее правило рендера (нужно студийным теням).
+  root.traverse(x => { const m = x as any; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true } })
   // ЗО[ОБЪЕКТ]: совместимость скина — данные объекта, движок только прокидывает в userData.
   if (r.compatibility) root.userData.skinCompatibility = r.compatibility
 

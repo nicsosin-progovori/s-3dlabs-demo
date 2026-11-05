@@ -138,3 +138,15 @@ _Собираем по ходу прохода по `README.md`. Выводы �
   glTF Y-up метры) и зафиксированы в манифесте — Blender-знание живёт на этапе подготовки,
   движок получает готовые числа.
 - Проверка: dev → http://127.0.0.1:5180/object.html?object=bottle@v01
+
+## Тени и лимиты орбиты в плеере
+- Тени: плеер перешёл с плоского ContactShadows на студийную схему — AccumulativeShadows +
+  2 RandomizedLight (area по направлению key-света + contact сверху). ВСЕ параметры берутся
+  из данных объекта `scene.shadow` (frames/scale/position/opacity/color/radius/contact/samples).
+  Движок включает castShadow/receiveShadow на мешах объекта (общее правило). Тень запекается
+  один раз; при орбите камеры не пересчитывается (зависит от объекта+света, не от камеры).
+- Лимиты орбиты: та же математика, что в студии (bottleOrbitLimits) — minDistance .6,
+  maxDistance (кэп 12 / над полом .06), minPolarAngle .08, maxPolarAngle (камера не уходит под
+  пол), pan выключен, demping .13, rotateSpeed .65. Это политика плеера; константы привязаны
+  к миру ×worldScale (кандидат в слой «студия»). Помечено ЗО[...] в коде.
+- Проверка: dev → http://127.0.0.1:5180/object.html?object=bottle@v01
