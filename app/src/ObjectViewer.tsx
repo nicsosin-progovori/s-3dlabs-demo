@@ -2,19 +2,45 @@ import { createRoot } from 'react-dom/client'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, Environment, Lightformer, AccumulativeShadows, RandomizedLight } from '@react-three/drei'
-import { ACESFilmicToneMapping, MathUtils, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
+import { ACESFilmicToneMapping, BackSide, Color, DataTexture, LinearFilter, MathUtils, PerspectiveCamera, RGBAFormat, SRGBColorSpace, Vector3 } from 'three'
 import { loadObjectManifest } from './objectLoader'
 import { buildFromManifest, type BuiltObject } from './objectEngine'
 
 /* Зоны ответственности помечены "ЗО[...]" — легенда в objectEngine.ts.
- * Здесь render-оболочка плеера: свет-рига, тени, контролы, крен камеры. */
+ * Здесь render-оболочка плеера: окружение/фон, свет, тени, контролы, крен камеры. */
 
 async function buildObject(id: string, rev: string, signal: AbortSignal): Promise<BuiltObject> {
   return buildFromManifest(await loadObjectManifest(id, rev), signal)
 }
 
-/** Свет/окружение. ЗО[ОБЪЕКТ]: значения из сцены объекта. ЗО[СТУДИЯ?]: сама обвязка — показ.
- *  ЗО[ВОПРОС]: tone mapping жёстко ACESFilmic (переопределяет scene.toneMapping объекта). */
+/** Вертикальный градиент top↔bottom в текстуру (sRGB) для видимого задника. */
+function gradientTexture(bottom: string, top: string) {
+  const n = 256, data = new Uint8Array(n * 4), b = new Color(bottom), t = new Color(top), c = new Color()
+  for (let i = 0; i < n; i++) { c.copy(b).lerp(t, i / (n - 1)); const o = i * 4; data[o] = c.r * 255; data[o + 1] = c.g * 255; data[o + 2] = c.b * 255; data[o + 3] = 255 }
+  const tex = new DataTexture(data, 1, n, RGBAFormat); tex.colorSpace = SRGBColorSpace
+  tex.flipY = false; tex.minFilter = tex.magFilter = LinearFilter; tex.needsUpdate = true
+  return tex
+}
+
+/** Видимый задник: большая сфера-циклорама с градиентом из background ОБЪЕКТА.
+ *  ЗО[ОБЪЕКТ]: цвета top/bottom — из сцены объекта. ЗО[СТУДИЯ?]: сама «бесшовная бумага»
+ *  (сфера-градиент) — способ показа, кандидат в слой «студия». Дешёвая замена студийной
+ *  циклорамы (studioBackdrop завязан на весь студийный пайплайн — его сюда не тащим). */
+function Backdrop({ bg }: { bg?: { top: string; bottom: string } }) {
+  const tex = useMemo(() => bg ? gradientTexture(bg.bottom, bg.top) : null, [bg])
+  useEffect(() => () => { tex?.dispose() }, [tex])
+  if (!tex) return null
+  return (
+    <mesh scale={60} renderOrder={-1}>
+      <sphereGeometry args={[1, 32, 16]} />
+      <meshBasicMaterial map={tex} side={BackSide} depthWrite={false} />
+    </mesh>
+  )
+}
+
+/** Свет + окружение для ОТРАЖЕНИЙ (IBL). ЗО[ОБЪЕКТ]: surround/boxes/resolution/intensity и
+ *  свет — всё из сцены объекта. ЗО[СТУДИЯ?]: сама схема (surround-сфера + софтбоксы) — показ,
+ *  та же, что в студийном StudioStage. ЗО[ВОПРОС]: tone mapping жёстко ACES (переопределяет scene.toneMapping). */
 function Rig({ p }: { p: any }) {
   const gl = useThree(s => s.gl)
   useLayoutEffect(() => {
@@ -22,19 +48,20 @@ function Rig({ p }: { p: any }) {
     gl.toneMappingExposure = p?.exposure ?? 1          // ЗО[ОБЪЕКТ]
     gl.outputColorSpace = SRGBColorSpace               // ЗО[ОБЩЕЕ]
   }, [gl, p])
-  const boxes: any[] = p?.environment?.boxes ?? []
+  const env = p?.environment ?? {}
+  const boxes: any[] = env.boxes ?? []
   return (
     <>
       <ambientLight intensity={p?.ambient ?? 0.4} />
       {p?.hemisphere && <hemisphereLight args={[p.hemisphere.sky, p.hemisphere.ground, p.hemisphere.intensity]} />}
       {p?.key && <directionalLight position={p.key.position} intensity={p.key.intensity} color={p.key.color} />}
       {p?.fill && <directionalLight position={p.fill.position} intensity={p.fill.intensity} color={p.fill.color} />}
-      {/* ЗО[СТУДИЯ?]: Environment-софтбоксы как «студийное окружение» — оформление показа. */}
-      <Environment resolution={256} environmentIntensity={p?.environment?.intensity ?? 1} frames={1}>
-        <color attach="background" args={['#111']} />
+      <Environment resolution={env.resolution ?? 256} environmentIntensity={env.intensity ?? 1} frames={1}>
+        {/* ЗО[ОБЪЕКТ]: surround объекта — окружение для отражений металла (как в студии). */}
+        <mesh scale={40}><sphereGeometry args={[1, 32, 16]} /><meshBasicMaterial color={env.surround ?? '#42413e'} side={BackSide} toneMapped={false} /></mesh>
         {boxes.map((b, i) => (
           <Lightformer key={i} form="rect" intensity={b.intensity} color={b.color}
-            position={b.position} scale={[b.scale?.[0] ?? 2, b.scale?.[1] ?? 2, 1]} />
+            position={b.position} scale={[b.scale?.[0] ?? 2, b.scale?.[1] ?? 2, 1]} target={[0, 0, 0]} />
         ))}
         {boxes.length === 0 && <Lightformer form="rect" intensity={2} position={[0, 4, 2]} scale={[6, 6, 1]} />}
       </Environment>
@@ -42,11 +69,7 @@ function Rig({ p }: { p: any }) {
   )
 }
 
-/** Студийные тени. ЗО[ОБЪЕКТ]: ВСЕ параметры (frames, scale, position, opacity, color, radius,
- *  contact, area/contactSamples) — из сцены объекта (scene.shadow). ЗО[СТУДИЯ?]: сама схема
- *  (AccumulativeShadows + 2 RandomizedLight: «area» по направлению key + «contact» сверху) —
- *  способ показа; тот же, что в студии (StudioStage). Запекается один раз, при орбите камеры
- *  не пересчитывается (тень зависит от объекта и света, не от камеры). */
+/** Студийные тени. ЗО[ОБЪЕКТ]: все параметры из scene.shadow. ЗО[СТУДИЯ?]: сама схема. */
 function StudioShadows({ s, keyPos }: { s: any; keyPos?: number[] }) {
   if (!s) return null
   const contact = s.contact ?? 0.22
@@ -64,9 +87,7 @@ function StudioShadows({ s, keyPos }: { s: any; keyPos?: number[] }) {
   )
 }
 
-/** ЗО[ОБЩЕЕ]: лимиты орбиты — та же математика, что в студии (bottleOrbitLimits).
- *  Держит камеру над полом и ограничивает отдаление. Константы (пол .06, кэп 12) — в системе
- *  мира ×worldScale. ЗО[ПОЛИТИКА]: это политика плеера (кандидат в слой «студия»). */
+/** ЗО[ОБЩЕЕ]: лимиты орбиты — математика студии (bottleOrbitLimits). ЗО[ПОЛИТИКА]: константы в мире ×worldScale. */
 const FLOOR = 0.06
 function orbitLimits(position: Vector3, target: Vector3) {
   const direction = position.clone().sub(target).normalize(), radius = position.distanceTo(target)
@@ -101,14 +122,13 @@ function Viewer() {
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const ctrl = new AbortController()
-    // ЗО[ПОЛИТИКА]: дефолтный объект 'bottle@v01', если не задан ?object= — удобство плеера.
     const q = new URLSearchParams(location.search).get('object') ?? 'bottle@v01'
     const [id, rev = 'v01'] = q.split('@')
     buildObject(id, rev, ctrl.signal)
       .then(b => {
         setBuilt(b); setNote(`${id}@${rev} — ${b.note}`)
-        const bg = b.scene?.background // ЗО[ВОПРОС]: фон = объект или студия?
-        if (bg) document.body.style.background = `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)`
+        const bg = b.scene?.background // ЗО[ОБЪЕКТ]: цвет страницы-подложки до/за сценой
+        if (bg) document.body.style.background = bg.bottom
       })
       .catch(e => setError(e?.message ?? String(e)))
     return () => ctrl.abort()
@@ -119,11 +139,12 @@ function Viewer() {
   return (
     <>
       <div className="badge">{note}</div>
-      <Canvas camera={{ position: built.camera.position, fov: built.camera.fov, near: built.camera.near, far: built.camera.far }} dpr={[1, 2]} gl={{ alpha: true }} shadows>
+      {/* alpha:false — непрозрачный холст, видимый фон даёт 3D-задник объекта */}
+      <Canvas camera={{ position: built.camera.position, fov: built.camera.fov, near: built.camera.near, far: built.camera.far }} dpr={[1, 2]} gl={{ alpha: false }} shadows>
+        <Backdrop bg={built.scene?.background} />
         <Rig p={built.scene} />
         <primitive object={built.root} />
         <StudioShadows s={built.scene?.shadow} keyPos={built.scene?.key?.position} />
-        {/* ЗО[ПОЛИТИКА]: лимиты орбиты как в студии — pan выкл., приближение/отдаление и угол над полом ограничены. */}
         <OrbitControls makeDefault enablePan={false} enableDamping dampingFactor={0.13} rotateSpeed={0.65}
           minDistance={0.6} maxDistance={limits.maxDistance} minPolarAngle={0.08} maxPolarAngle={limits.maxPolarAngle}
           target={built.camera.target} />
