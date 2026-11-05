@@ -44,3 +44,13 @@ export function pickGeometryUrl(o: LoadedObject): string {
   if (!master) throw new Error('Object has no geometry GLB')
   return partUrl(o.base, master.file)
 }
+
+/** Дескриптор скина из манифеста объекта (file+sha+bytes) для загрузчика скинов. */
+export function skinResource(o: LoadedObject, skinKey: string): { basePath: string; descriptor: { file: string; sha256: string; bytes: number }; id: string; revision: string } {
+  const [id, revision = 'v01'] = skinKey.split('@')
+  const dir = o.manifest.render?.skinsDir ?? 'skins'
+  const file = `${dir}/${id}/${revision}/skin.json`
+  const entry = (o.manifest.parts.skins ?? []).find(f => f.file === file)
+  if (!entry) throw new Error('Skin not in object package: ' + skinKey)
+  return { basePath: o.base, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes }, id, revision }
+}

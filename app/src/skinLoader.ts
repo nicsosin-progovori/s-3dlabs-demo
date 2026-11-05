@@ -31,10 +31,10 @@ interface OwnedTexture {texture:Texture;image:ResourceLease<ImageBitmap>;bytes:n
 const textures=new SkinResourceCache<OwnedTexture>(16*1024*1024,64,v=>v.bytes,v=>{v.texture.dispose();v.image.release()})
 const fetchQueue=new SkinFetchQueue(2)
 const digest=async(data:ArrayBuffer)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),v=>v.toString(16).padStart(2,'0')).join('')
-const url=(file:string)=>new URL(import.meta.env.BASE_URL+file,location.href).href
-async function bytes(file:string,hash:string,size:number,signal:AbortSignal,priority:RequestPriority){
+const url=(file:string,base:string=import.meta.env.BASE_URL)=>new URL(base+file,location.href).href
+async function bytes(file:string,hash:string,size:number,signal:AbortSignal,priority:RequestPriority,base?:string){
   return fetchQueue.run(signal,priority,async()=>{
-    const response=await fetch(url(file),{signal:AbortSignal.any([signal,AbortSignal.timeout(30_000)]),priority})
+    const response=await fetch(url(file,base),{signal:AbortSignal.any([signal,AbortSignal.timeout(30_000)]),priority})
     if(!response.ok)throw new Error('Skin resource HTTP '+response.status)
     const data=await response.arrayBuffer()
     if(data.byteLength!==size||await digest(data)!==hash)throw new Error('Skin resource integrity mismatch')
@@ -58,7 +58,7 @@ function validateManifest(manifest:SkinManifest,ref:SkinRef){
 }
 const wrap=(value=10497)=>({10497:RepeatWrapping,33071:ClampToEdgeWrapping,33648:MirroredRepeatWrapping}[value]??RepeatWrapping)
 const minFilter=(value=9987)=>({9728:NearestFilter,9729:LinearFilter,9984:NearestMipmapNearestFilter,9985:LinearMipmapNearestFilter,9986:NearestMipmapLinearFilter,9987:LinearMipmapLinearFilter}[value]??LinearMipmapLinearFilter)
-async function textureLease(info:TextureInfo,profile:Profile,color:boolean,signal:AbortSignal,priority:RequestPriority){
+async function textureLease(info:TextureInfo,profile:Profile,color:boolean,signal:AbortSignal,priority:RequestPriority,base?:string){
   const definition=profile.textures[info.index]
   if(!definition)throw new Error('Invalid skin texture index')
   const im=profile.images[definition.source],sampler=profile.samplers[definition.sampler??-1]??{},transform=info.extensions?.KHR_texture_transform??{}
@@ -66,7 +66,7 @@ async function textureLease(info:TextureInfo,profile:Profile,color:boolean,signa
   const key=JSON.stringify([im.sha256,sampler.wrapS??10497,sampler.wrapT??10497,sampler.magFilter??9729,sampler.minFilter??9987,transform.offset??[0,0],transform.scale??[1,1],transform.rotation??0,transform.texCoord??info.texCoord??0,color])
   return textures.acquire(key,async resourceSignal=>{
     const image=await images.acquire(im.sha256,async imageSignal=>{
-      const data=await bytes(im.file,im.sha256,im.bytes,imageSignal,priority)
+      const data=await bytes(im.file,im.sha256,im.bytes,imageSignal,priority,base)
       const bitmap=await createImageBitmap(new Blob([data],{type:im.mimeType}),{imageOrientation:'none',premultiplyAlpha:'none',colorSpaceConversion:'none'})
       if(bitmap.width!==im.width||bitmap.height!==im.height){bitmap.close();throw new Error('Skin image dimensions mismatch')}
       return bitmap
@@ -84,10 +84,10 @@ async function textureLease(info:TextureInfo,profile:Profile,color:boolean,signa
     }catch(error){image.release();throw error}
   },signal)
 }
-export async function loadSkin(input:SkinRef,quality:SkinQuality,signal:AbortSignal,priority:RequestPriority='high'):Promise<SkinBundle>{
-  const ref=normaliseSkin(input),descriptor=skinDescriptor(ref)
+export async function loadSkin(input:SkinRef,quality:SkinQuality,signal:AbortSignal,priority:RequestPriority='high',resources?:{basePath?:string;descriptor?:{file:string;sha256:string;bytes:number}}):Promise<SkinBundle>{
+  const ref=normaliseSkin(input),base=resources?.basePath,descriptor=resources?.descriptor??skinDescriptor(ref)
   const manifestLease=await manifests.acquire(descriptor.sha256,async resourceSignal=>{
-    const data=await bytes(descriptor.file,descriptor.sha256,descriptor.bytes,resourceSignal,priority)
+    const data=await bytes(descriptor.file,descriptor.sha256,descriptor.bytes,resourceSignal,priority,base)
     const manifest=JSON.parse(new TextDecoder().decode(data)) as SkinManifest;validateManifest(manifest,ref);return manifest
   },signal)
   const controller=new AbortController(),combined=AbortSignal.any([signal,controller.signal]),leases:ResourceLease<OwnedTexture>[]=[],materials=new Map<string,MeshStandardMaterial>()
@@ -106,7 +106,7 @@ export async function loadSkin(input:SkinRef,quality:SkinQuality,signal:AbortSig
     material.envMapIntensity=1
     const assign=async(key:string,info:TextureInfo|undefined,color=false)=>{
       if(!info)return
-      const lease=await textureLease(info,profile,color,combined,priority);leases.push(lease)
+      const lease=await textureLease(info,profile,color,combined,priority,base);leases.push(lease)
       ;(material as unknown as Record<string,unknown>)[key]=lease.value.texture
     }
     await Promise.all([
@@ -136,7 +136,7 @@ export interface SkinBinding {
   preview:(bundle:SkinBundle)=>{root:SourceModel['root'];dispose:()=>void}
   dispose:()=>void
 }
-function bindSkin(model:SourceModel,initial:SkinBundle):SkinBinding{
+export function bindSkin(model:SourceModel,initial:SkinBundle):SkinBinding{
   if(!compatible(model.root.userData.skinCompatibility))throw new Error('Geometry skin contract mismatch')
   type Features={derivativeTangents:boolean;vertexColors:boolean;flatShading:boolean}
   const features=(mesh:Mesh):Features=>({derivativeTangents:!mesh.geometry.attributes.tangent,vertexColors:!!mesh.geometry.attributes.color,flatShading:!mesh.geometry.attributes.normal})
