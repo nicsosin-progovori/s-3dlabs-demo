@@ -20,7 +20,9 @@ services:
       BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
       NODE_OPTIONS: ${WEB_NODE_OPTIONS:-}
     ports: ["5180:5180"]
-    volumes: ["../../volumes/uploads:/app/.cache/uploads"]
+    volumes:
+      - "../../volumes/uploads:/app/.cache/uploads"
+      - "../../objects:/objects:ro"
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
 
   renderer:
@@ -35,7 +37,9 @@ services:
       BOTTLE_ALLOWED_ORIGINS: ${BOTTLE_ALLOWED_ORIGINS:-}
       NODE_OPTIONS: ${RENDERER_NODE_OPTIONS:-}
     ports: ["5181:5181"]
-    volumes: ["../../volumes/uploads:/app/.cache/uploads"]
+    volumes:
+      - "../../volumes/uploads:/app/.cache/uploads"
+      - "../../objects:/objects:ro"
     init: true
     shm_size: "1gb"
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
@@ -58,6 +62,8 @@ services:
       - ../../app:/app                 # ← синхронизация исходников и app/dist с хостом
       - dev_node_modules:/app/node_modules  # ← не на хост (платформенные бинарники)
       - dev_cache:/app/.cache
+      - ../../volumes/uploads:/app/.cache/uploads
+      - ../../objects:/objects:ro
     init: true
     shm_size: "1gb"
     command: sh -c "mkdir -p .cache/uploads/logos && exec npm run dev:bottle"
