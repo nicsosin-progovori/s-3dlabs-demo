@@ -19,6 +19,7 @@ if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid PORT'
 const origin=`http://127.0.0.1:${port}`
 const dist=path.join(root,'dist')
 const sceneRoot=path.join(root,'config/scenes')
+const objectsRoot=process.env.OBJECTS_DIR??path.resolve(root,'..','objects')
 const allowedOrigins=parseAllowedOrigins(process.env.BOTTLE_ALLOWED_ORIGINS)
 if(production&&!existsSync(path.join(dist,'bottle.html')))throw new Error('Run npm run build before npm start')
 const renderer=createRenderer({root,origin})
@@ -98,6 +99,7 @@ const server=createServer(async(request,response)=>{
       response.writeHead(200,{'Content-Type':'image/png','Content-Length':result.png.length,'Content-Disposition':`attachment; filename="bottle-${job.state}.png"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Render-Engine':'server-chromium','X-Render-Id':result.id,'X-Render-Skin':result.skin.id+'@'+result.skin.revision,'X-Render-Camera-SHA256':result.cameraHash,'X-Render-Scene':result.scene.id+'@'+result.scene.revision,'X-Render-Scene-SHA256':result.scene.sha256,'X-Render-Composition-SHA256':result.compositionHash,'X-Render-Decoration-SHA256':result.decorationHash})
       response.end(result.png);return
     }
+    if(url.pathname.startsWith('/objects/')){await staticFile(request,response,url.pathname.replace(/^\/objects/,'')||'/',objectsRoot);return}
     if(url.pathname.startsWith('/api/')){json(response,404,{error:'Not found'});return}
     if(!['GET','HEAD'].includes(request.method)){response.setHeader('Allow','GET, HEAD');json(response,405,{error:'Method not allowed'});return}
     if(production)await staticFile(request,response,url.pathname)

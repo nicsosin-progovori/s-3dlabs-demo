@@ -112,3 +112,11 @@ _Собираем по ходу прохода по `README.md`. Выводы �
 - git: objects/**/*.glb и *.png игнорируются (бинарники не дублируем), манифесты/json видны.
 - Архитектура в docs/architecture/objects.md. iframe-направление снято (не цель владельца).
 - Дальше: шаг 2 — рантайм-загрузчик по ID (читает manifest, грузит, рендерит).
+
+## Шаг 2 сделан — рантайм-загрузчик по ID (аддитивно)
+- app/src/objectLoader.ts — fetch objects/<id>/<rev>/manifest.json, валидация ключа/identity, резолв URL частей.
+- app/src/ObjectViewer.tsx + app/object.html — лёгкий вход: грузит объект по ?object=id@rev и рендерит геометрию (R3F, без студийной обвязки, без внешних HDR).
+- app/server/start.mjs — objectsRoot (OBJECTS_DIR, деф. ../objects) + маршрут /objects/* статикой.
+- vite.config: object.html добавлен во входы. compose: ../../objects:/objects:ro в web/renderer/dev.
+- Студию НЕ трогали (bottle.html работает по-старому). Пока плеер рендерит только геометрию — скин/сцена/камера из манифеста добавим следующими шагами.
+- Проверка: dev → http://127.0.0.1:5180/object.html?object=bottle@v01 (бутылка, грузится из /objects/); bottle.html работает.

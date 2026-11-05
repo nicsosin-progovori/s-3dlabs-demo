@@ -9,7 +9,7 @@ export default defineConfig({
   preview: { host: '127.0.0.1', port: 4173, strictPort: true },
   build: {
     rolldownOptions: {
-      input: {main:'index.html',bottle:'bottle.html',render:'render.html'},
+      input: {main:'index.html',bottle:'bottle.html',render:'render.html',object:'object.html'},
       output: {
         manualChunks(id) {
           if (id.includes('/node_modules/three/')) return 'three'
