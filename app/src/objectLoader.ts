@@ -1,5 +1,6 @@
-/** Движок берёт объект по ключу id@revision из внешнего хранилища objects/.
- *  Никаких compile-time импортов — только рантайм-чтение манифеста и ссылок. */
+/** GENERIC-загрузчик: знает только манифест и как резолвить ссылки.
+ *  Никаких знаний о конкретном объекте здесь нет — интерпретацией занимается
+ *  единый движок src/objectEngine.ts, читая данные из manifest.render. */
 export interface ManifestPart { file: string; bytes: number; sha256: string }
 export interface ObjectRender {
   adapter?: string
@@ -34,23 +35,4 @@ export async function loadObjectManifest(id: string, revision: string, baseUrl: 
 }
 export function partUrl(base: string, file: string, baseUrl: string = location.href): string {
   return new URL(base + file, baseUrl).href
-}
-/** Выбор основного GLB объекта: мастер `<id>.glb`, иначе первый .glb. */
-export function pickGeometryUrl(o: LoadedObject): string {
-  const final = o.manifest.render?.geometry?.final
-  if (final) return partUrl(o.base, final)
-  const geo = o.manifest.parts.geometry ?? []
-  const master = geo.find(f => f.file.endsWith('/' + o.manifest.id + '.glb')) ?? geo.find(f => f.file.endsWith('.glb'))
-  if (!master) throw new Error('Object has no geometry GLB')
-  return partUrl(o.base, master.file)
-}
-
-/** Дескриптор скина из манифеста объекта (file+sha+bytes) для загрузчика скинов. */
-export function skinResource(o: LoadedObject, skinKey: string): { basePath: string; descriptor: { file: string; sha256: string; bytes: number }; id: string; revision: string } {
-  const [id, revision = 'v01'] = skinKey.split('@')
-  const dir = o.manifest.render?.skinsDir ?? 'skins'
-  const file = `${dir}/${id}/${revision}/skin.json`
-  const entry = (o.manifest.parts.skins ?? []).find(f => f.file === file)
-  if (!entry) throw new Error('Skin not in object package: ' + skinKey)
-  return { basePath: o.base, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes }, id, revision }
 }

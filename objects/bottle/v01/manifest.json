@@ -218,11 +218,50 @@
     ]
   },
   "render": {
-    "adapter": "bottle",
     "units": "metres",
     "frame": {
       "up": "Y",
-      "front": "+Z"
+      "front": "+Z",
+      "units": "metres",
+      "floor": "Y0",
+      "boundsByState": {
+        "closed": {
+          "min": [
+            -0.035,
+            0.0,
+            -0.035
+          ],
+          "max": [
+            0.035,
+            0.20968,
+            0.035
+          ]
+        },
+        "open": {
+          "min": [
+            -0.035,
+            0.0,
+            -0.035
+          ],
+          "max": [
+            0.09898,
+            0.187,
+            0.036
+          ]
+        },
+        "lying": {
+          "min": [
+            -0.0,
+            -0.0,
+            -0.035
+          ],
+          "max": [
+            0.20968,
+            0.07,
+            0.035
+          ]
+        }
+      }
     },
     "geometry": {
       "final": "geometry/bottle-geometry-final-v01.glb",
@@ -242,6 +281,9 @@
       "modelId": "bottle",
       "uvLayout": "bottle-uv-v01",
       "materialBindings": "bottle-materials-v01"
-    }
+    },
+    "hide": [
+      "print_surface"
+    ]
   }
 }

@@ -1,59 +1,103 @@
 import { createRoot } from 'react-dom/client'
-import { useEffect, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import { Group } from 'three'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-import { loadObjectManifest, pickGeometryUrl, skinResource } from './objectLoader'
-import { loadSkin, bindSkin } from './skinLoader'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { OrbitControls, Environment, Lightformer, ContactShadows } from '@react-three/drei'
+import { ACESFilmicToneMapping, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three'
+import { loadObjectManifest } from './objectLoader'
+import { buildFromManifest, type BuiltObject } from './objectEngine'
 
-/** Движок интерпретирует объект по манифесту: геометрия + скин (далее сцена/камера). */
-async function buildObject(id: string, rev: string, signal: AbortSignal): Promise<{ root: Group; note: string }> {
-  const o = await loadObjectManifest(id, rev)
-  const geoUrl = pickGeometryUrl(o)
-  const gltf = await new GLTFLoader().loadAsync(geoUrl)
-  const root = gltf.scene
-  root.traverse(obj => { if (obj.userData.print_surface) obj.visible = false })
-  const compat = o.manifest.render?.compatibility
-  if (compat) root.userData.skinCompatibility = compat
-  let note = 'геометрия + скин'
-  const skinKey = o.manifest.render?.defaultSkin
-  if (skinKey) {
-    try {
-      const r = skinResource(o, skinKey)
-      const bundle = await loadSkin({ id: r.id, revision: r.revision }, 'final', signal, 'high', { basePath: r.basePath, descriptor: r.descriptor })
-      bindSkin({ root, productId: o.manifest.id, dispose: () => {} }, bundle)
-      note = `скин ${skinKey} применён`
-    } catch (e) {
-      note = 'геометрия (скин не применился: ' + ((e as Error)?.message ?? e) + ')'
-    }
-  }
-  return { root, note }
+/* Зоны ответственности помечены "ЗО[...]" — та же легенда, что в objectEngine.ts.
+ * Здесь живёт render-оболочка плеера: свет-рига, тени, контролы, крен камеры. */
+
+async function buildObject(id: string, rev: string, signal: AbortSignal): Promise<BuiltObject> {
+  return buildFromManifest(await loadObjectManifest(id, rev), signal)
+}
+
+/** Свет/окружение. ЗО[ОБЪЕКТ]: ВСЕ значения (exposure, ambient, hemisphere, key/fill, боксы
+ *  окружения) берутся из сцены объекта. ЗО[СТУДИЯ?]: но САМА обвязка (какой рига, Environment
+ *  как софтбоксы, фон '#111', resolution 256) — выбор плеера/студии, не объекта.
+ *  ЗО[ВОПРОС]: tone mapping здесь ЖЁСТКО ACESFilmic — это переопределяет scene.toneMapping объекта.
+ *  Кто владеет тонмаппингом: объект, студия или плеер? Сейчас — плеер молча ставит ACES. */
+function Rig({ p }: { p: any }) {
+  const gl = useThree(s => s.gl)
+  useLayoutEffect(() => {
+    gl.toneMapping = ACESFilmicToneMapping            // ЗО[ВОПРОС]: игнорит p.toneMapping
+    gl.toneMappingExposure = p?.exposure ?? 1          // ЗО[ОБЪЕКТ]
+    gl.outputColorSpace = SRGBColorSpace               // ЗО[ОБЩЕЕ]
+  }, [gl, p])
+  const boxes: any[] = p?.environment?.boxes ?? []
+  return (
+    <>
+      <ambientLight intensity={p?.ambient ?? 0.4} />
+      {p?.hemisphere && <hemisphereLight args={[p.hemisphere.sky, p.hemisphere.ground, p.hemisphere.intensity]} />}
+      {p?.key && <directionalLight position={p.key.position} intensity={p.key.intensity} color={p.key.color} />}
+      {p?.fill && <directionalLight position={p.fill.position} intensity={p.fill.intensity} color={p.fill.color} />}
+      {/* ЗО[СТУДИЯ?]: Environment-софтбоксы как «студийное окружение» — оформление показа. */}
+      <Environment resolution={256} environmentIntensity={p?.environment?.intensity ?? 1} frames={1}>
+        <color attach="background" args={['#111']} />
+        {boxes.map((b, i) => (
+          <Lightformer key={i} form="rect" intensity={b.intensity} color={b.color}
+            position={b.position} scale={[b.scale?.[0] ?? 2, b.scale?.[1] ?? 2, 1]} />
+        ))}
+        {/* ЗО[ПОЛИТИКА]: запасной софтбокс, если объект не привёз окружение. */}
+        {boxes.length === 0 && <Lightformer form="rect" intensity={2} position={[0, 4, 2]} scale={[6, 6, 1]} />}
+      </Environment>
+    </>
+  )
+}
+
+/** ЗО[ОБЩЕЕ]: film-roll (крен) — общая математика: поворот up вокруг оси взгляда на roll°.
+ *  Орбита всегда с вертикальным up (0,1,0). ЗО[ОБЪЕКТ]: сам угол roll и near/far — из ракурса объекта. */
+const DEG = Math.PI / 180
+function CameraFilm({ cam }: { cam: BuiltObject['camera'] }) {
+  const camera = useThree(s => s.camera)
+  const target = useRef(new Vector3(...cam.target))
+  useLayoutEffect(() => {
+    target.current.set(...cam.target)
+    if (camera instanceof PerspectiveCamera) { camera.near = cam.near; camera.far = cam.far; camera.fov = cam.fov; camera.updateProjectionMatrix() }
+  }, [camera, cam])
+  useFrame(() => {
+    const dir = camera.position.clone().sub(target.current).normalize()
+    camera.up.set(0, 1, 0).applyAxisAngle(dir, (cam.roll ?? 0) * DEG)
+    camera.lookAt(target.current)
+    camera.up.set(0, 1, 0)
+  })
+  return null
 }
 
 function Viewer() {
-  const [root, setRoot] = useState<Group | null>(null)
+  const [built, setBuilt] = useState<BuiltObject | null>(null)
   const [note, setNote] = useState('Загрузка…')
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const ctrl = new AbortController()
+    // ЗО[ПОЛИТИКА]: дефолтный объект 'bottle@v01', если не задан ?object= — это удобство плеера.
     const q = new URLSearchParams(location.search).get('object') ?? 'bottle@v01'
     const [id, rev = 'v01'] = q.split('@')
     buildObject(id, rev, ctrl.signal)
-      .then(r => { setRoot(r.root); setNote(`${id}@${rev} — ${r.note}`) })
+      .then(b => {
+        setBuilt(b); setNote(`${id}@${rev} — ${b.note}`)
+        // ЗО[ОБЪЕКТ]: фон страницы — из background сцены объекта. ЗО[ВОПРОС]: фон = объект или студия?
+        const bg = b.scene?.background
+        if (bg) document.body.style.background = `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)`
+      })
       .catch(e => setError(e?.message ?? String(e)))
     return () => ctrl.abort()
   }, [])
   if (error) return <div className="msg err">Объект не загрузился: {error}</div>
+  if (!built) return <div className="msg">{note}</div>
   return (
     <>
       <div className="badge">{note}</div>
-      <Canvas camera={{ position: [0.45, 0.3, 0.5], fov: 35 }} dpr={[1, 2]}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[2, 3, 2]} intensity={2.2} />
-        <directionalLight position={[-2, 1, -2]} intensity={0.7} />
-        {root && <primitive object={root} />}
-        <OrbitControls target={[0, 0.1, 0]} />
+      {/* ЗО[ПОЛИТИКА]: dpr [1,2], alpha, shadows — настройки рендера плеера. */}
+      <Canvas camera={{ position: built.camera.position, fov: built.camera.fov, near: built.camera.near, far: built.camera.far }} dpr={[1, 2]} gl={{ alpha: true }} shadows>
+        <Rig p={built.scene} />
+        <primitive object={built.root} />
+        {/* ЗО[ОБЪЕКТ]: opacity/color тени — из сцены. ЗО[ПОЛИТИКА]: scale/blur/resolution — эвристики плеера. */}
+        <ContactShadows position={[built.camera.target[0], 0.001, built.camera.target[2]]} opacity={built.scene?.shadow?.opacity ?? 0.5} scale={built.shadowScale} blur={2.5} far={built.shadowScale} resolution={1024} color={built.scene?.shadow?.color ?? '#000000'} />
+        {/* ЗО[ПОЛИТИКА]: свободная орбита без лимитов — выбор плеера (в студии лимиты другие). */}
+        <OrbitControls makeDefault target={built.camera.target} />
+        <CameraFilm cam={built.camera} />
       </Canvas>
     </>
   )
