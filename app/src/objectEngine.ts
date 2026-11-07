@@ -2,7 +2,7 @@ import { Box3, Group, Vector3 } from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { LoadedObject } from './objectLoader'
 import { partUrl } from './objectLoader'
-import { loadSkin, bindSkin } from './skinLoader'
+import { loadSkin, bindSkin, type SkinBinding, type SkinBundle } from './skinLoader'
 import { compositionFrame } from './compositionCamera'
 import { validateSceneProfile } from '../shared/sceneContract.mjs'
 import { validateCameraViews } from '../shared/cameraViewsContract.mjs'
@@ -24,7 +24,22 @@ export interface BuiltObject {
   scene: any | null
   camera: { position: [number, number, number]; target: [number, number, number]; fov: number; roll: number; near: number; far: number }
   shadowScale: number
+  /** живая привязка скина — через неё меняем скин без перезагрузки геометрии */
+  skin: SkinBinding | null
+  skinKey: string | null
   note: string
+}
+
+/** Скин "<id>@<rev>" из пакета объекта. Строго: нет в пакете — ошибка.
+ *  ЗО[ОБЪЕКТ/КОНВЕНЦИЯ]: путь skins/<id>/<rev>/skin.json. ЗО[ПОЛИТИКА]: качество 'final', приоритет 'high'. */
+export async function loadSkinBundle(o: LoadedObject, skinKey: string, signal: AbortSignal): Promise<SkinBundle> {
+  const r: any = o.manifest.render ?? {}
+  const [sid, srev] = String(skinKey).split('@')
+  if (!sid || !srev) throw new Error(`Invalid skin key "${skinKey}"`)
+  const file = `${r.skinsDir ?? 'skins'}/${sid}/${srev}/skin.json`
+  const entry = (o.manifest.parts.skins ?? []).find((f: any) => f.file === file)
+  if (!entry) throw new Error(`Skin ${skinKey} is not in object ${o.manifest.id}@${o.manifest.revision}`)
+  return loadSkin({ id: sid, revision: srev }, 'final', signal, 'high', { basePath: o.base, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes } })
 }
 
 async function fetchJson(base: string, ref: string) {
@@ -35,7 +50,7 @@ async function fetchJson(base: string, ref: string) {
 
 /** ЕДИНЫЙ generic-движок. Читает только manifest.render.*, применяет общие правила.
  *  Кода «про конкретный объект» здесь нет — но решений о границах пока много (см. ЗО[...]). */
-export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, viewport?: { width: number; height: number }): Promise<BuiltObject> {
+export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, viewport?: { width: number; height: number }, skinKey?: string): Promise<BuiltObject> {
   const r: any = o.manifest.render ?? {}
 
   // ЗО[ВОПРОС]: какое состояние показываем по умолчанию? Сейчас берёт объект (defaultState),
@@ -58,21 +73,14 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
   // ЗО[ОБЪЕКТ]: совместимость скина — данные объекта, движок только прокидывает в userData.
   if (r.compatibility) root.userData.skinCompatibility = r.compatibility
 
+  // ЗО[ОБЪЕКТ]: скин задаёт вызывающий (SKU); если не задан — дефолт объекта (render.defaultSkin).
+  // Строго: скин не загрузился/не подошёл — ошибка всей сборки, без «геометрии без скина».
   let note = 'геометрия'
-  if (r.defaultSkin) {
-    try {
-      // ЗО[ОБЪЕКТ]: какой скин по умолчанию и где лежат скины — объект (defaultSkin, skinsDir).
-      // ЗО[ПОЛИТИКА]: качество скина зашито 'final' и приоритет 'high' — это выбор плеера (качество/сеть).
-      // ЗО[ОБЪЕКТ/КОНВЕНЦИЯ]: ревизия по умолчанию 'v01' и путь skins/<id>/<rev>/skin.json —
-      //   это договорённость о структуре пакета объекта.
-      const [sid, srev = 'v01'] = String(r.defaultSkin).split('@')
-      const file = `${r.skinsDir ?? 'skins'}/${sid}/${srev}/skin.json`
-      const entry = (o.manifest.parts.skins ?? []).find((f: any) => f.file === file)
-      if (!entry) throw new Error('скин отсутствует в пакете')
-      const bundle = await loadSkin({ id: sid, revision: srev }, 'final', signal, 'high', { basePath: o.base, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes } })
-      bindSkin({ root, productId: o.manifest.id, dispose: () => {} }, bundle)
-      note = 'скин ' + r.defaultSkin
-    } catch (e) { note = 'скин не применился: ' + ((e as Error)?.message ?? e) }
+  const useSkin: string | null = skinKey ?? r.defaultSkin ?? null
+  let skin: SkinBinding | null = null
+  if (useSkin) {
+    skin = bindSkin({ root, productId: o.manifest.id, dispose: () => {} }, await loadSkinBundle(o, useSkin, signal))
+    note = 'скин ' + useSkin
   }
 
   // ЗО[ОБЪЕКТ]: сцена/свет/тени/окружение — данные объекта (render.scene → контракт сцены).
@@ -143,6 +151,6 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
       near: view?.near ?? 0.025, far: view?.far ?? 100,
     },
     // ЗО[ПОЛИТИКА]: размер контактной тени = maxDim*1.5 — эвристика плеера, не данные объекта.
-    shadowScale: maxDim * 1.5, note,
+    shadowScale: maxDim * 1.5, skin, skinKey: useSkin, note,
   }
 }

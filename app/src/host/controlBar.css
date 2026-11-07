@@ -15,6 +15,10 @@ body { display: flex }
   font: 13px system-ui; width: 100%; box-sizing: border-box; padding: 5px 8px;
   border-radius: 6px; border: 1px solid #fff2; background: #2c2c2e; color: inherit;
 }
+#control-bar .cb-field { display: block; margin-bottom: 10px }
+#control-bar .cb-field > span { display: block; margin-bottom: 4px; color: #fffb }
+#control-bar select:disabled { opacity: .45 }
+#control-bar .cb-note { color: #ff8a8a; font-size: 12px; word-break: break-word }
 
 @media (max-width: 700px) {
   body { flex-direction: column }

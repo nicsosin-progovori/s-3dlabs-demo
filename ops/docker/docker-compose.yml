@@ -23,6 +23,7 @@ services:
     volumes:
       - "../../volumes/uploads:/app/.cache/uploads"
       - "../../objects:/objects:ro"
+      - "../../skus:/skus:ro"
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
 
   renderer:
@@ -40,6 +41,7 @@ services:
     volumes:
       - "../../volumes/uploads:/app/.cache/uploads"
       - "../../objects:/objects:ro"
+      - "../../skus:/skus:ro"
     init: true
     shm_size: "1gb"
     # restart: unless-stopped   # раскомментируй, если нужно, чтобы сервис сам поднимался после перезапуска Docker/ПК
@@ -64,6 +66,7 @@ services:
       - dev_cache:/app/.cache
       - ../../volumes/uploads:/app/.cache/uploads
       - ../../objects:/objects:ro
+      - ../../skus:/skus:ro
     init: true
     shm_size: "1gb"
     command: sh -c "mkdir -p .cache/uploads/logos && exec npm run dev:bottle"

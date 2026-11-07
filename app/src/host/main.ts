@@ -1,10 +1,9 @@
 import './controlBar.css'
 import { mountControlBar } from './controlBar'
-import { objectSelect } from './controls/objectSelect'
+import { skuSelect } from './controls/skuSelect'
 
-/* Точка входа хоста. Порядок в index.html важен: этот модуль идёт ДО плеера,
- * чтобы начальный объект (data-object) был выставлен до его монтирования. */
+/* Точка входа хоста. Плееру командует только через src/playerContract.ts (setSku). */
 mountControlBar(document.getElementById('control-bar')!, [
-  objectSelect,
+  skuSelect,
   // сюда добавляем новые публичные действия плеера
 ])
