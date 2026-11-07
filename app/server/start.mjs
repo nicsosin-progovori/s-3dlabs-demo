@@ -20,6 +20,7 @@ const origin=`http://127.0.0.1:${port}`
 const dist=path.join(root,'dist')
 const sceneRoot=path.join(root,'config/scenes')
 const objectsRoot=process.env.OBJECTS_DIR??path.resolve(root,'..','objects')
+const skusRoot=process.env.SKUS_DIR??path.resolve(root,'..','skus')
 const allowedOrigins=parseAllowedOrigins(process.env.BOTTLE_ALLOWED_ORIGINS)
 if(production&&!existsSync(path.join(dist,'bottle.html')))throw new Error('Run npm run build before npm start')
 const renderer=createRenderer({root,origin})
@@ -100,6 +101,7 @@ const server=createServer(async(request,response)=>{
       response.end(result.png);return
     }
     if(url.pathname.startsWith('/objects/')){await staticFile(request,response,url.pathname.replace(/^\/objects/,'')||'/',objectsRoot);return}
+    if(url.pathname.startsWith('/skus/')){await staticFile(request,response,url.pathname.replace(/^\/skus/,'')||'/',skusRoot);return}
     if(url.pathname.startsWith('/api/')){json(response,404,{error:'Not found'});return}
     if(!['GET','HEAD'].includes(request.method)){response.setHeader('Allow','GET, HEAD');json(response,405,{error:'Method not allowed'});return}
     if(production)await staticFile(request,response,url.pathname)
