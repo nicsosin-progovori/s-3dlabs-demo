@@ -1,0 +1,23 @@
+/* Раскладка страницы-хоста: плеер слева, бар справа. На узком экране — бар снизу. */
+html, body { margin: 0; height: 100%; background: #f3f2ee }
+body { display: flex }
+#root { flex: 1; min-width: 0; height: 100%; position: relative }
+
+#control-bar {
+  width: 280px; flex: none; height: 100%; overflow-y: auto; box-sizing: border-box;
+  background: #1c1c1e; color: #f2f2f2; font: 13px/1.4 system-ui;
+  border-left: 1px solid #0003;
+}
+#control-bar .cb-head { padding: 14px 16px; font-weight: 600; letter-spacing: .04em; border-bottom: 1px solid #fff1 }
+#control-bar .cb-section { padding: 12px 16px; border-bottom: 1px solid #fff1 }
+#control-bar h2 { margin: 0 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #fff9 }
+#control-bar select, #control-bar button, #control-bar input {
+  font: 13px system-ui; width: 100%; box-sizing: border-box; padding: 5px 8px;
+  border-radius: 6px; border: 1px solid #fff2; background: #2c2c2e; color: inherit;
+}
+
+@media (max-width: 700px) {
+  body { flex-direction: column }
+  #root { height: auto; flex: 1 }
+  #control-bar { width: 100%; height: auto; max-height: 40vh; border-left: 0; border-top: 1px solid #0003 }
+}

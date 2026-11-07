@@ -7,72 +7,13 @@
     <meta name="description" content="Produkt-Objekte in 3D ansehen — dein Logo auf echten Produkten." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>S. 3DLABS</title>
-    <style>
-      html,body,#root{margin:0;height:100%;background:#f3f2ee}
-      .msg{font:16px/1.5 system-ui;padding:56px 24px 24px}
-      .msg.empty{color:#55524c}
-      .err{color:#a1222b}
-      /* статус самого плеера (это ВЫВОД, не управление) */
-      .badge{position:fixed;bottom:10px;left:10px;font:12px/1.4 system-ui;
-             background:#0009;color:#fff;padding:5px 9px;border-radius:6px;z-index:2}
-      /* host-бар: обычный DOM страницы, НЕ часть React-приложения */
-      #host-bar{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:14px;
-                padding:7px 12px;font:13px/1.4 system-ui;background:#0009;color:#fff;z-index:3;
-                -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-      #host-bar .brand{font-weight:600;letter-spacing:.04em}
-      #host-bar label{display:flex;align-items:center;gap:6px}
-      #host-bar select{font:13px system-ui;padding:3px 6px;border-radius:5px;border:0}
-    </style>
   </head>
   <body>
-    <!-- ═══ HOST-UI ═══════════════════════════════════════════════════════════
-         Обычный HTML/JS. НЕ относится к React/плееру. Единственное место, которое
-         ВЫБИРАЕТ объект. Командует плееру через КОНТРАКТ:
-           • начальное: #root[data-object] = "<id>@<rev>"  (нет атрибута = ничего не грузить)
-           • смена:     window CustomEvent 's3d:load', detail { object:"<id>@<rev>"|null }
-         Добавить объект = добавить <option> ниже (value = "<id>@<rev>").
-         По умолчанию выбран пустой пункт — плеер покажет «выберите объект». -->
-    <div id="host-bar">
-      <span class="brand">S. 3DLABS</span>
-      <label>Объект:
-        <select id="object-select">
-          <option value="">— выберите объект —</option>
-          <option value="bottle@v01">Термобутылка (bottle@v01)</option>
-        </select>
-      </label>
-    </div>
-
+    <!-- плеер; контракт host↔player — src/playerContract.ts -->
     <div id="root"></div>
-
-    <script>
-      /* HOST-логика: единственное место, которое ВЫБИРАЕТ объект. Плеер лишь слушает. */
-      (function () {
-        var sel = document.getElementById('object-select');
-        var root = document.getElementById('root');
-
-        function reflect(key, writeUrl) {
-          var u = new URL(location.href);
-          if (key) { root.setAttribute('data-object', key); u.searchParams.set('object', key); }
-          else     { root.removeAttribute('data-object');   u.searchParams.delete('object'); }
-          if (writeUrl) history.replaceState(null, '', u);
-        }
-
-        // deep-link ?object= — выбрать соответствующий пункт, если он есть в списке
-        var fromUrl = new URLSearchParams(location.search).get('object');
-        var inList = fromUrl && Array.prototype.some.call(sel.options, function (o) { return o.value === fromUrl; });
-        sel.value = inList ? fromUrl : '';            // по умолчанию ничего не выбрано
-        // начальное состояние для плеера — ДО его монтирования. Без dispatch:
-        // плеер прочитает data-object сам. Заодно чистим «мусорный» ?object=.
-        reflect(sel.value, !inList && !!fromUrl);
-
-        // смена объекта: обновляем URL и командуем плееру (сам плеер не выбирает)
-        sel.addEventListener('change', function () {
-          var key = sel.value;
-          reflect(key, true);
-          window.dispatchEvent(new CustomEvent('s3d:load', { detail: { object: key || null } }));
-        });
-      })();
-    </script>
+    <!-- бар управления (хост); контролы — src/host/controls/ -->
+    <aside id="control-bar"></aside>
+    <script type="module" src="/src/host/main.ts"></script>
     <script type="module" src="/src/ObjectViewer.tsx"></script>
   </body>
 </html>

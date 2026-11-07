@@ -35,7 +35,7 @@ async function fetchJson(base: string, ref: string) {
 
 /** ЕДИНЫЙ generic-движок. Читает только manifest.render.*, применяет общие правила.
  *  Кода «про конкретный объект» здесь нет — но решений о границах пока много (см. ЗО[...]). */
-export async function buildFromManifest(o: LoadedObject, signal: AbortSignal): Promise<BuiltObject> {
+export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, viewport?: { width: number; height: number }): Promise<BuiltObject> {
   const r: any = o.manifest.render ?? {}
 
   // ЗО[ВОПРОС]: какое состояние показываем по умолчанию? Сейчас берёт объект (defaultState),
@@ -127,8 +127,9 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal): P
   // ЗО[ОБЩЕЕ]: аспект берём из окна (runtime плеера), subject/zoom — из данных объекта.
   const size = box.getSize(new Vector3())
   const maxDim = Math.max(size.x, size.y, size.z) || 3
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 1440
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 1000
+  // ЗО[ОБЩЕЕ]: аспект — размер области плеера (передаёт плеер); фолбэк — окно.
+  const vw = viewport?.width ?? (typeof window !== 'undefined' ? window.innerWidth : 1440)
+  const vh = viewport?.height ?? (typeof window !== 'undefined' ? window.innerHeight : 1000)
   const f = compositionFrame(box, view?.azimuth ?? 24, view?.elevation ?? 0.3, vw, vh, {
     fov: view?.fov ?? 28, roll: view?.roll ?? 0, margin: view?.margin ?? 1.12, subject: view?.subject ?? [0, 0], zoom: view?.zoom ?? 1,
   })

@@ -1,0 +1,5 @@
+/* Стили самого плеера (это ВЫВОД плеера, не управление). */
+.player-state { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 24px; color: #55524c }
+.player-state[data-state="error"] { color: #a1222b }
+.badge { position: absolute; bottom: 10px; left: 10px; font: 12px/1.4 system-ui;
+         background: #0009; color: #fff; padding: 5px 9px; border-radius: 6px; z-index: 2 }

@@ -5,12 +5,17 @@ import { OrbitControls, Environment, Lightformer, AccumulativeShadows, Randomize
 import { ACESFilmicToneMapping, BackSide, Color, DataTexture, LinearFilter, MathUtils, PerspectiveCamera, RGBAFormat, SRGBColorSpace, Vector3 } from 'three'
 import { loadObjectManifest } from './objectLoader'
 import { buildFromManifest, type BuiltObject } from './objectEngine'
+import { PLAYER_ROOT_ID, onLoad, readInitialObject } from './playerContract'
+import './objectViewer.css'
 
 /* Зоны ответственности помечены "ЗО[...]" — легенда в objectEngine.ts.
  * Здесь render-оболочка плеера: окружение/фон, свет, тени, контролы, крен камеры. */
 
 async function buildObject(id: string, rev: string, signal: AbortSignal): Promise<BuiltObject> {
-  return buildFromManifest(await loadObjectManifest(id, rev), signal)
+  // кадр считаем по размеру КОНТЕЙНЕРА плеера, а не окна (рядом может быть бар хоста)
+  const el = document.getElementById(PLAYER_ROOT_ID)
+  const viewport = el && el.clientWidth && el.clientHeight ? { width: el.clientWidth, height: el.clientHeight } : undefined
+  return buildFromManifest(await loadObjectManifest(id, rev), signal, viewport)
 }
 
 /** Вертикальный градиент top↔bottom в текстуру (sRGB) для видимого задника. */
@@ -116,58 +121,52 @@ function CameraFilm({ cam }: { cam: BuiltObject['camera'] }) {
   return null
 }
 
-/* ───────────────────────────────────────────────────────────────────────────
- * ПУБЛИЧНЫЙ КОНТРАКТ host ↔ player (кандидат в публичный API).
- * Плеер — ЧИСТЫЙ ПОТРЕБИТЕЛЬ: НЕ владеет списком, НЕ рисует переключатель,
- * НЕ трогает URL и НЕ знает никакого «дефолтного» объекта.
- * Что грузить — решает «кто-то сверху» (host):
- *   • начальный объект — атрибут #root[data-object] = "<id>@<rev>"
- *                        (нет атрибута / иначе ?object= / иначе — пусто);
- *   • смена объекта    — событие window `s3d:load`, detail { object: "<id>@<rev>" | null }.
- * Если объект не задан — плеер показывает пустую страницу с просьбой выбрать. */
+/* Плеер — ЧИСТЫЙ ПОТРЕБИТЕЛЬ: не владеет списком, не рисует управление, не трогает URL.
+ * Что грузить — решает хост через публичный контракт (src/playerContract.ts).
+ * Плеер НЕ знает, кто и как задаёт объект, — он только сообщает своё СОСТОЯНИЕ. */
 
-function hostKey(): string {
-  const fromAttr = document.getElementById('root')?.dataset.object
-  const fromUrl = new URLSearchParams(location.search).get('object')
-  return fromAttr || fromUrl || ''
+/** Состояние плеера. Всё, что плеер о себе говорит, — это одно из них. */
+type PlayerState =
+  | { state: 'empty' }                                    // объект не задан
+  | { state: 'loading'; object: string }
+  | { state: 'ready'; object: string; built: BuiltObject }
+  | { state: 'error'; object: string; reason: string }
+
+/** Нейтральный вывод состояния — без UX-текстов и без отсылок к чему-либо вне плеера. */
+function StateView({ s }: { s: Exclude<PlayerState, { state: 'ready' }> }) {
+  const detail = s.state === 'empty' ? 'объект не задан'
+    : s.state === 'loading' ? s.object
+    : `${s.object}: ${s.reason}`
+  return <div className="player-state" data-state={s.state}>{s.state} — {detail}</div>
 }
 
 function Viewer() {
-  const [sel, setSel] = useState<string>(hostKey)
-  const [built, setBuilt] = useState<BuiltObject | null>(null)
-  const [note, setNote] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [sel, setSel] = useState<string>(readInitialObject)
+  const [ps, setPs] = useState<PlayerState>({ state: 'empty' })
   // ЗО[КОНТРАКТ]: слушаем команду «сверху». Пустой object → очистить.
+  useEffect(() => onLoad(key => setSel(key ?? '')), [])
   useEffect(() => {
-    const onLoad = (e: Event) => {
-      const key = (e as CustomEvent).detail?.object
-      setSel(typeof key === 'string' ? key : '')
-    }
-    window.addEventListener('s3d:load', onLoad)
-    return () => window.removeEventListener('s3d:load', onLoad)
-  }, [])
-  useEffect(() => {
-    setError(null)
-    if (!sel) { setBuilt(null); setNote(''); document.body.style.background = ''; return }
-    setBuilt(null); setNote('Загрузка…')
+    if (!sel) { setPs({ state: 'empty' }); document.body.style.background = ''; return }
+    setPs({ state: 'loading', object: sel })
     const ctrl = new AbortController()
     const [id, rev = 'v01'] = sel.split('@')
     buildObject(id, rev, ctrl.signal)
-      .then(b => {
-        setBuilt(b); setNote(`${id}@${rev} — ${b.note}`)
-        const bg = b.scene?.background // ЗО[ОБЪЕКТ]: цвет страницы-подложки до/за сценой
+      .then(built => {
+        setPs({ state: 'ready', object: sel, built })
+        const bg = built.scene?.background // ЗО[ОБЪЕКТ]: цвет страницы-подложки до/за сценой
         if (bg) document.body.style.background = bg.bottom
       })
-      .catch(e => { if (!ctrl.signal.aborted) setError(e?.message ?? String(e)) })
+      .catch(e => { if (!ctrl.signal.aborted) setPs({ state: 'error', object: sel, reason: e?.message ?? String(e) }) })
     return () => ctrl.abort()
   }, [sel])
+  // состояние наружу — атрибутом на корне (пригодится для обратной связи)
+  useEffect(() => { const r = document.getElementById(PLAYER_ROOT_ID); if (r) r.dataset.state = ps.state }, [ps.state])
+  const built = ps.state === 'ready' ? ps.built : null
   const limits = useMemo(() => built ? orbitLimits(new Vector3(...built.camera.position), new Vector3(...built.camera.target)) : null, [built])
-  if (!sel) return <div className="msg empty">Выберите объект на панели сверху.</div>
-  if (error) return <div className="msg err">Объект не загрузился: {error}</div>
-  if (!built || !limits) return <div className="msg">{note}</div>
+  if (ps.state !== 'ready' || !built || !limits) return <StateView s={ps.state === 'ready' ? { state: 'loading', object: ps.object } : ps} />
   return (
     <>
-      <div className="badge">{note}</div>
+      <div className="badge">{ps.object} — {built.note}</div>
       {/* alpha:false — непрозрачный холст, видимый фон даёт 3D-задник объекта */}
       <Canvas camera={{ position: built.camera.position, fov: built.camera.fov, near: built.camera.near, far: built.camera.far }} dpr={[1, 2]} gl={{ alpha: false }} shadows>
         <Backdrop bg={built.scene?.background} />
@@ -182,4 +181,4 @@ function Viewer() {
     </>
   )
 }
-createRoot(document.getElementById('root')!).render(<Viewer />)
+createRoot(document.getElementById(PLAYER_ROOT_ID)!).render(<Viewer />)
