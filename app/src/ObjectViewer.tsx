@@ -70,7 +70,7 @@ function Rig({ p }: { p: any }) {
 }
 
 /** Студийные тени. ЗО[ОБЪЕКТ]: все параметры из scene.shadow. ЗО[СТУДИЯ?]: сама схема. */
-function StudioShadows({ s, keyPos }: { s: any; keyPos?: number[] }) {
+function StudioShadows({ s, keyPos }: { s: any; keyPos?: [number, number, number] }) {
   if (!s) return null
   const contact = s.contact ?? 0.22
   return (
