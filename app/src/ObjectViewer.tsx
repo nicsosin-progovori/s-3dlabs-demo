@@ -116,24 +116,53 @@ function CameraFilm({ cam }: { cam: BuiltObject['camera'] }) {
   return null
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+ * ПУБЛИЧНЫЙ КОНТРАКТ host ↔ player (кандидат в публичный API).
+ * Плеер — ЧИСТЫЙ ПОТРЕБИТЕЛЬ: НЕ владеет списком, НЕ рисует переключатель,
+ * НЕ трогает URL и НЕ знает никакого «дефолтного» объекта.
+ * Что грузить — решает «кто-то сверху» (host):
+ *   • начальный объект — атрибут #root[data-object] = "<id>@<rev>"
+ *                        (нет атрибута / иначе ?object= / иначе — пусто);
+ *   • смена объекта    — событие window `s3d:load`, detail { object: "<id>@<rev>" | null }.
+ * Если объект не задан — плеер показывает пустую страницу с просьбой выбрать. */
+
+function hostKey(): string {
+  const fromAttr = document.getElementById('root')?.dataset.object
+  const fromUrl = new URLSearchParams(location.search).get('object')
+  return fromAttr || fromUrl || ''
+}
+
 function Viewer() {
+  const [sel, setSel] = useState<string>(hostKey)
   const [built, setBuilt] = useState<BuiltObject | null>(null)
-  const [note, setNote] = useState('Загрузка…')
+  const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // ЗО[КОНТРАКТ]: слушаем команду «сверху». Пустой object → очистить.
   useEffect(() => {
+    const onLoad = (e: Event) => {
+      const key = (e as CustomEvent).detail?.object
+      setSel(typeof key === 'string' ? key : '')
+    }
+    window.addEventListener('s3d:load', onLoad)
+    return () => window.removeEventListener('s3d:load', onLoad)
+  }, [])
+  useEffect(() => {
+    setError(null)
+    if (!sel) { setBuilt(null); setNote(''); document.body.style.background = ''; return }
+    setBuilt(null); setNote('Загрузка…')
     const ctrl = new AbortController()
-    const q = new URLSearchParams(location.search).get('object') ?? 'bottle@v01'
-    const [id, rev = 'v01'] = q.split('@')
+    const [id, rev = 'v01'] = sel.split('@')
     buildObject(id, rev, ctrl.signal)
       .then(b => {
         setBuilt(b); setNote(`${id}@${rev} — ${b.note}`)
         const bg = b.scene?.background // ЗО[ОБЪЕКТ]: цвет страницы-подложки до/за сценой
         if (bg) document.body.style.background = bg.bottom
       })
-      .catch(e => setError(e?.message ?? String(e)))
+      .catch(e => { if (!ctrl.signal.aborted) setError(e?.message ?? String(e)) })
     return () => ctrl.abort()
-  }, [])
+  }, [sel])
   const limits = useMemo(() => built ? orbitLimits(new Vector3(...built.camera.position), new Vector3(...built.camera.target)) : null, [built])
+  if (!sel) return <div className="msg empty">Выберите объект на панели сверху.</div>
   if (error) return <div className="msg err">Объект не загрузился: {error}</div>
   if (!built || !limits) return <div className="msg">{note}</div>
   return (
