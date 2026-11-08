@@ -1,12 +1,17 @@
 import { createRoot } from 'react-dom/client'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls, Environment, Lightformer, AccumulativeShadows, RandomizedLight } from '@react-three/drei'
-import { ACESFilmicToneMapping, BackSide, Color, DataTexture, LinearFilter, MathUtils, PerspectiveCamera, RGBAFormat, SRGBColorSpace, Vector3 } from 'three'
-import { loadObjectManifest, type LoadedObject } from './objectLoader'
-import { buildFromManifest, loadSkinBundle, type BuiltObject } from './objectEngine'
-import { loadSku } from './skuLoader'
-import { PLAYER_ROOT_ID, onLoad, readSku } from './playerContract'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
+import { MathUtils, Vector3 } from 'three'
+import { loadObjectManifest, type LoadedObject } from './engine/objectLoader'
+import { buildFromManifest, loadSkinBundle, type BuiltObject } from './engine/objectEngine'
+import { loadSku } from './engine/skuLoader'
+import { PLAYER_ROOT_ID, onLoad, readSku } from './engine/playerContract'
+import { Backdrop } from './components/Backdrop'
+import { Rig } from './components/Rig'
+import { ShadowSlot } from './components/ShadowSlot'
+import { CameraFilm } from './components/CameraFilm'
+import { MaterialFrames } from './components/MaterialFrames'
 import './objectViewer.css'
 
 /* Зоны ответственности помечены "ЗО[...]" — легенда в objectEngine.ts.
@@ -16,80 +21,6 @@ import './objectViewer.css'
 function playerViewport() {
   const el = document.getElementById(PLAYER_ROOT_ID)
   return el && el.clientWidth && el.clientHeight ? { width: el.clientWidth, height: el.clientHeight } : undefined
-}
-
-/** Вертикальный градиент top↔bottom в текстуру (sRGB) для видимого задника. */
-function gradientTexture(bottom: string, top: string) {
-  const n = 256, data = new Uint8Array(n * 4), b = new Color(bottom), t = new Color(top), c = new Color()
-  for (let i = 0; i < n; i++) { c.copy(b).lerp(t, i / (n - 1)); const o = i * 4; data[o] = c.r * 255; data[o + 1] = c.g * 255; data[o + 2] = c.b * 255; data[o + 3] = 255 }
-  const tex = new DataTexture(data, 1, n, RGBAFormat); tex.colorSpace = SRGBColorSpace
-  tex.flipY = false; tex.minFilter = tex.magFilter = LinearFilter; tex.needsUpdate = true
-  return tex
-}
-
-/** Видимый задник: большая сфера-циклорама с градиентом из background ОБЪЕКТА.
- *  ЗО[ОБЪЕКТ]: цвета top/bottom — из сцены объекта. ЗО[СТУДИЯ?]: сама «бесшовная бумага»
- *  (сфера-градиент) — способ показа, кандидат в слой «студия». Дешёвая замена студийной
- *  циклорамы (studioBackdrop завязан на весь студийный пайплайн — его сюда не тащим). */
-function Backdrop({ bg }: { bg?: { top: string; bottom: string } }) {
-  const tex = useMemo(() => bg ? gradientTexture(bg.bottom, bg.top) : null, [bg])
-  useEffect(() => () => { tex?.dispose() }, [tex])
-  if (!tex) return null
-  return (
-    <mesh scale={60} renderOrder={-1}>
-      <sphereGeometry args={[1, 32, 16]} />
-      <meshBasicMaterial map={tex} side={BackSide} depthWrite={false} />
-    </mesh>
-  )
-}
-
-/** Свет + окружение для ОТРАЖЕНИЙ (IBL). ЗО[ОБЪЕКТ]: surround/boxes/resolution/intensity и
- *  свет — всё из сцены объекта. ЗО[СТУДИЯ?]: сама схема (surround-сфера + софтбоксы) — показ,
- *  та же, что в студийном StudioStage. ЗО[ВОПРОС]: tone mapping жёстко ACES (переопределяет scene.toneMapping). */
-function Rig({ p }: { p: any }) {
-  const gl = useThree(s => s.gl)
-  useLayoutEffect(() => {
-    gl.toneMapping = ACESFilmicToneMapping            // ЗО[ВОПРОС]: игнорит p.toneMapping
-    gl.toneMappingExposure = p?.exposure ?? 1          // ЗО[ОБЪЕКТ]
-    gl.outputColorSpace = SRGBColorSpace               // ЗО[ОБЩЕЕ]
-  }, [gl, p])
-  const env = p?.environment ?? {}
-  const boxes: any[] = env.boxes ?? []
-  return (
-    <>
-      <ambientLight intensity={p?.ambient ?? 0.4} />
-      {p?.hemisphere && <hemisphereLight args={[p.hemisphere.sky, p.hemisphere.ground, p.hemisphere.intensity]} />}
-      {p?.key && <directionalLight position={p.key.position} intensity={p.key.intensity} color={p.key.color} />}
-      {p?.fill && <directionalLight position={p.fill.position} intensity={p.fill.intensity} color={p.fill.color} />}
-      <Environment resolution={env.resolution ?? 256} environmentIntensity={env.intensity ?? 1} frames={1}>
-        {/* ЗО[ОБЪЕКТ]: surround объекта — окружение для отражений металла (как в студии). */}
-        <mesh scale={40}><sphereGeometry args={[1, 32, 16]} /><meshBasicMaterial color={env.surround ?? '#42413e'} side={BackSide} toneMapped={false} /></mesh>
-        {boxes.map((b, i) => (
-          <Lightformer key={i} form="rect" intensity={b.intensity} color={b.color}
-            position={b.position} scale={[b.scale?.[0] ?? 2, b.scale?.[1] ?? 2, 1]} target={[0, 0, 0]} />
-        ))}
-        {boxes.length === 0 && <Lightformer form="rect" intensity={2} position={[0, 4, 2]} scale={[6, 6, 1]} />}
-      </Environment>
-    </>
-  )
-}
-
-/** Студийные тени. ЗО[ОБЪЕКТ]: все параметры из scene.shadow. ЗО[СТУДИЯ?]: сама схема. */
-function StudioShadows({ s, keyPos }: { s: any; keyPos?: [number, number, number] }) {
-  if (!s) return null
-  const contact = s.contact ?? 0.22
-  return (
-    <AccumulativeShadows temporal frames={s.frames ?? 48} scale={s.scale ?? 12}
-      position={s.position ?? [0, 0.002, 0]} resolution={s.resolution ?? 1024}
-      opacity={s.opacity ?? 0.5} color={s.color ?? '#242526'}>
-      <RandomizedLight amount={s.areaSamples ?? 8} radius={s.radius ?? 2.8} ambient={0}
-        intensity={Math.PI * (1 - contact)} position={keyPos ?? [-3.8, 6.3, 4.2]}
-        size={5} near={0.1} far={25} mapSize={s.lightMapSize ?? 1024} bias={0.0002} />
-      <RandomizedLight amount={s.contactSamples ?? 4} ambient={1}
-        intensity={Math.PI * contact} position={[0, 6, 0]}
-        size={5} near={0.1} far={25} mapSize={s.lightMapSize ?? 1024} bias={0.0002} />
-    </AccumulativeShadows>
-  )
 }
 
 /** ЗО[ОБЩЕЕ]: лимиты орбиты — математика студии (bottleOrbitLimits). ЗО[ПОЛИТИКА]: константы в мире ×worldScale. */
@@ -103,26 +34,8 @@ function orbitLimits(position: Vector3, target: Vector3) {
   return { maxDistance, maxPolarAngle }
 }
 
-/** ЗО[ОБЩЕЕ]: film-roll — поворот up вокруг оси взгляда; орбита всегда с вертикальным up. */
-const DEG = Math.PI / 180
-function CameraFilm({ cam }: { cam: BuiltObject['camera'] }) {
-  const camera = useThree(s => s.camera)
-  const target = useRef(new Vector3(...cam.target))
-  useLayoutEffect(() => {
-    target.current.set(...cam.target)
-    if (camera instanceof PerspectiveCamera) { camera.near = cam.near; camera.far = cam.far; camera.fov = cam.fov; camera.updateProjectionMatrix() }
-  }, [camera, cam])
-  useFrame(() => {
-    const dir = camera.position.clone().sub(target.current).normalize()
-    camera.up.set(0, 1, 0).applyAxisAngle(dir, (cam.roll ?? 0) * DEG)
-    camera.lookAt(target.current)
-    camera.up.set(0, 1, 0)
-  })
-  return null
-}
-
 /* Плеер — ЧИСТЫЙ ПОТРЕБИТЕЛЬ: не владеет списком, не рисует управление, не трогает URL.
- * Что показывать — решает хост через публичный контракт (src/playerContract.ts): SKU.
+ * Что показывать — решает хост через публичный контракт (engine/playerContract.ts): SKU.
  * Плеер сам читает simple SKU → { object, skin } и сообщает только своё СОСТОЯНИЕ. */
 
 /** Состояние плеера. Всё, что плеер о себе говорит, — это одно из них. */
@@ -189,6 +102,11 @@ function Viewer() {
   }, [sel])
   // состояние наружу — атрибутом на корне (пригодится для обратной связи)
   useEffect(() => { const r = document.getElementById(PLAYER_ROOT_ID); if (r) r.dataset.state = ps.state }, [ps.state])
+  // строго: тень не встала — показ объекта считается неудачным, ничего «старого» не оставляем
+  const failShadow = useCallback((e: unknown) => {
+    current.current?.built.skin?.dispose(); current.current = null
+    setPs(prev => prev.state === 'ready' ? { state: 'error', sku: prev.sku, reason: 'shadow: ' + ((e as Error)?.message ?? String(e)) } : prev)
+  }, [])
   const built = ps.state === 'ready' ? ps.built : null
   const limits = useMemo(() => built ? orbitLimits(new Vector3(...built.camera.position), new Vector3(...built.camera.target)) : null, [built])
   if (ps.state !== 'ready' || !built || !limits) return <StateView s={ps.state === 'ready' ? { state: 'loading', sku: ps.sku } : ps} />
@@ -200,7 +118,8 @@ function Viewer() {
         <Backdrop bg={built.scene?.background} />
         <Rig p={built.scene} />
         <primitive object={built.root} />
-        <StudioShadows s={built.scene?.shadow} keyPos={built.scene?.key?.position} />
+        <MaterialFrames root={built.root} />
+        <ShadowSlot built={built} onError={failShadow} />
         <OrbitControls makeDefault enablePan={false} enableDamping dampingFactor={0.13} rotateSpeed={0.65}
           minDistance={0.6} maxDistance={limits.maxDistance} minPolarAngle={0.08} maxPolarAngle={limits.maxPolarAngle}
           target={built.camera.target} />

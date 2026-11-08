@@ -1,6 +1,6 @@
 import type { BarControl } from '../controlBar'
-import { setSku } from '../../playerContract'
-import { loadSku, type ConfigurableSku } from '../../skuLoader'
+import { setSku } from '../../player/engine/playerContract'
+import { loadSku, type ConfigurableSku } from '../../player/engine/skuLoader'
 
 /* Выбор продукта по SKU.
  *   1) Parent (configurable) — список захардкожен (позже — из базы).

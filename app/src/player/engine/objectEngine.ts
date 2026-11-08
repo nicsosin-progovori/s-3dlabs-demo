@@ -2,10 +2,11 @@ import { Box3, Group, Vector3 } from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { LoadedObject } from './objectLoader'
 import { partUrl } from './objectLoader'
-import { loadSkin, bindSkin, type SkinBinding, type SkinBundle } from './skinLoader'
-import { compositionFrame } from './compositionCamera'
-import { validateSceneProfile } from '../shared/sceneContract.mjs'
-import { validateCameraViews } from '../shared/cameraViewsContract.mjs'
+import { loadSkin, bindSkin, type SkinBinding, type SkinBundle } from '../materials/skinLoader'
+import { loadShadow, sceneShadowLight, shadowDeclaration, type PreparedShadow, type SceneShadowLight } from '../sockets/shadowSocket'
+import { compositionFrame } from '../../compositionCamera'
+import { validateSceneProfile } from '../../../shared/sceneContract.mjs'
+import { validateCameraViews } from '../../../shared/cameraViewsContract.mjs'
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * КАРТА ЗОН ОТВЕТСТВЕННОСТИ (грепай по "ЗО[")
@@ -27,6 +28,8 @@ export interface BuiltObject {
   /** живая привязка скина — через неё меняем скин без перезагрузки геометрии */
   skin: SkinBinding | null
   skinKey: string | null
+  /** тень, которую выбрал объект (пакет из shadows/), и свет сцены для неё; null — объект явно без тени */
+  shadow: { prepared: PreparedShadow; light: SceneShadowLight } | null
   note: string
 }
 
@@ -79,7 +82,7 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
   const useSkin: string | null = skinKey ?? r.defaultSkin ?? null
   let skin: SkinBinding | null = null
   if (useSkin) {
-    skin = bindSkin({ root, productId: o.manifest.id, dispose: () => {} }, await loadSkinBundle(o, useSkin, signal))
+    skin = bindSkin({ root }, await loadSkinBundle(o, useSkin, signal))
     note = 'скин ' + useSkin
   }
 
@@ -93,6 +96,17 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
   if (r.scene) {
     try { const prof: any = validateSceneProfile(await fetchJson(o.base, r.scene)); scene = prof.settings; worldScale = prof.coordinates?.worldScale ?? 1; note += ' + сцена' }
     catch (e) { note += ' (сцена: ' + ((e as Error)?.message ?? e) + ')' }
+  }
+
+  // ЗО[ОБЪЕКТ]: тень выбирает объект (render.shadow → пакет из shadows/). Движок тень не содержит.
+  // ЗО[ГРАНИЦА]: направление и чёткость тени — от света СЦЕНЫ; вид тени — от пакета тени.
+  // Строго: объект обязан объявить тень (или null); пакет/параметры/свет не сошлись — ошибка сборки.
+  const shadowDecl = shadowDeclaration(r)
+  let shadow: BuiltObject['shadow'] = null
+  if (shadowDecl) {
+    const light = sceneShadowLight(scene)
+    shadow = { prepared: await loadShadow(shadowDecl, signal), light }
+    note += ' + тень ' + shadowDecl.use
   }
 
   // ЗО[ОБЪЕКТ]: ПАРАМЕТРЫ ракурсов (azimuth/elevation/fov/roll/subject/margin) везёт объект (render.camera).
@@ -151,6 +165,6 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
       near: view?.near ?? 0.025, far: view?.far ?? 100,
     },
     // ЗО[ПОЛИТИКА]: размер контактной тени = maxDim*1.5 — эвристика плеера, не данные объекта.
-    shadowScale: maxDim * 1.5, skin, skinKey: useSkin, note,
+    shadowScale: maxDim * 1.5, skin, skinKey: useSkin, shadow, note,
   }
 }

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skin-enhancement.schema.json",
+  "title": "Улучшение скина — поле enhancement в skin.json",
+  "description": "Необязательный код скина поверх базового скина. Путь — от корня пакета объекта. Документация: docs/architecture/02-skin.md §7.",
+  "type": "object",
+  "required": [
+    "file",
+    "sha256",
+    "bytes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "file": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._\\-/]+\\.m?js$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 524288
+    },
+    "params": {
+      "description": "для модуля; движок не читает"
+    }
+  }
+}
