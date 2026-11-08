@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "shadow.schema.json",
+  "title": "Пакет тени — shadows/<id>/<rev>/shadow.json",
+  "description": "Контракт тени: что объект может подстроить и где код. Проверяется плеером (src/player/sockets/shadowSocket.ts) до загрузки кода. Документация: docs/architecture/contracts.md, shadow.md.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "revision",
+    "apiVersion",
+    "entry",
+    "params"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+      "description": "совпадает с папкой <id>"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "совпадает с папкой <rev>"
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "apiVersion": {
+      "const": 1,
+      "description": "версия API гнезда тени (SHADOW_API_VERSION)"
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "file",
+        "sha256",
+        "bytes"
+      ],
+      "additionalProperties": false,
+      "description": "код тени; путь от папки пакета",
+      "properties": {
+        "file": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._\\-/]+\\.m?js$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 524288
+        }
+      }
+    },
+    "needsFromScene": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "справочно: какие значения света сцены использует тень"
+    },
+    "params": {
+      "type": "object",
+      "description": "параметры, которые объект может задать в render.shadow.params",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "min",
+              "max",
+              "default"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": [
+                  "number",
+                  "integer"
+                ]
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "default": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "default"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "color"
+              },
+              "default": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "min",
+              "max",
+              "default"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "vector3"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "default": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

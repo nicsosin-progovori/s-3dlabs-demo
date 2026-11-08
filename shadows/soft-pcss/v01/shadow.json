@@ -1,0 +1,96 @@
+{
+  "$schema": "../../../app/contracts/shadow.schema.json",
+  "schemaVersion": 1,
+  "id": "soft-pcss",
+  "revision": "v01",
+  "label": {
+    "de": "Weicher Studioschatten",
+    "en": "Soft studio shadow",
+    "ru": "Мягкая студийная тень"
+  },
+  "apiVersion": 1,
+  "entry": {
+    "file": "shadow.js",
+    "sha256": "0fb4d86fc05d1db3eb645c998246a248e8ac7059b8948f27820e012a55ba9120",
+    "bytes": 11697
+  },
+  "needsFromScene": [
+    "key.position",
+    "shadow.radius",
+    "shadow.lightMapSize"
+  ],
+  "params": {
+    "opacity": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "default": 0.5,
+      "note": "плотность тени на полу"
+    },
+    "color": {
+      "type": "color",
+      "default": "#242526",
+      "note": "цвет тени"
+    },
+    "contact": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "default": 0.22,
+      "note": "доля мягкого «контактного» затемнения под объектом"
+    },
+    "frames": {
+      "type": "integer",
+      "min": 2,
+      "max": 128,
+      "default": 48,
+      "note": "сколько кадров копится тень"
+    },
+    "resolution": {
+      "type": "integer",
+      "min": 128,
+      "max": 2048,
+      "default": 1024,
+      "note": "разрешение карты тени на полу"
+    },
+    "scale": {
+      "type": "number",
+      "min": 1,
+      "max": 40,
+      "default": 12,
+      "note": "размер плоскости-приёмника (в мире)"
+    },
+    "position": {
+      "type": "vector3",
+      "min": -30,
+      "max": 30,
+      "default": [
+        0,
+        0.002,
+        0
+      ],
+      "note": "положение приёмника (чуть над полом)"
+    },
+    "areaSamples": {
+      "type": "integer",
+      "min": 1,
+      "max": 16,
+      "default": 8,
+      "note": "лучей ключевого света за кадр"
+    },
+    "contactSamples": {
+      "type": "integer",
+      "min": 1,
+      "max": 8,
+      "default": 4,
+      "note": "лучей контактной тени за кадр"
+    },
+    "productMinTexels": {
+      "type": "number",
+      "min": 0.5,
+      "max": 4,
+      "default": 2,
+      "note": "минимальный радиус PCSS на объекте, в текселях"
+    }
+  }
+}

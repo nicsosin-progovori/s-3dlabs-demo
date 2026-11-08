@@ -64,48 +64,48 @@
     "skins": [
       {
         "file": "skins/bottle-green/v01/skin.json",
-        "bytes": 6697,
-        "sha256": "38d80b9b21ba2382b24dfb576be00ce495007d1bbb1263a475ab7adc543d70d2"
+        "bytes": 6758,
+        "sha256": "be27baec9c49d845ce40d55d3c57596979bc53b9245f59f7f83f1c92f747794b"
       },
       {
         "file": "skins/bottle-turquoise/v01/skin.json",
-        "bytes": 6699,
-        "sha256": "05edfbec99b068b05b2b31de8d445576a8b9c417b2faf993c4982683735110bb"
+        "bytes": 6760,
+        "sha256": "ad68658184fd512d91d199f2b822f3c1cb06df92c9ea38d77d67d371452ef5bb"
       },
       {
         "file": "skins/bottle-navy/v01/skin.json",
-        "bytes": 6696,
-        "sha256": "d2b72a095e34b287075d99adc5d85b49ef183a6c23e6b667b722a48bc632bade"
+        "bytes": 6757,
+        "sha256": "932b90e0275ff60078aad0c959d272fd3296fd63619205be0d52a0bb2e5297d0"
       },
       {
         "file": "skins/bottle-silver/v01/skin.json",
-        "bytes": 6715,
-        "sha256": "d57c5628e6109d2bf17a97628827c54179737bb1b793fe9fc0985916fe124aba"
+        "bytes": 6776,
+        "sha256": "38810c4d8c032ca2a2e71c244a5c87c3c40a155063e8db3624dc039a103d15f5"
       },
       {
         "file": "skins/bottle-red/v01/skin.json",
-        "bytes": 6694,
-        "sha256": "8d348637b83e945ff2259ae94bf2d983ab57da7ec247910ebffe756e12d5b0fa"
+        "bytes": 6755,
+        "sha256": "bb6a68815cba1cf6491bfebb27ff465fac01f85adb45fcd94f0966875d9fa161"
       },
       {
         "file": "skins/bottle-white/v01/skin.json",
-        "bytes": 6709,
-        "sha256": "77329edc2fa9498c1b931d9fc108acb2814b0b9879f040fc4bd709693748882a"
+        "bytes": 6770,
+        "sha256": "271b0766b007e8f45f538ad099640fd7485e0effd6aef22ea06c3611904e7c4c"
       },
       {
         "file": "skins/bottle-black/v01/skin.json",
-        "bytes": 6699,
-        "sha256": "609635551ed98df2c23abbfb1461fa8e2feb4e3c4aa4b076f41eb8a25a232429"
+        "bytes": 6760,
+        "sha256": "bce9a79d74447fd51be8ffbd53a991a55a61f5546e9396bd4971d22e9ed57b75"
       },
       {
         "file": "skins/bottle-orange/v01/skin.json",
-        "bytes": 6697,
-        "sha256": "54e5a2e61944a1da878f1e7b6db6fe6ffd7a51f906709ec52b7ba98285b2cf0a"
+        "bytes": 6758,
+        "sha256": "0238e7e8e19a8122a75f296c06b7332106adc1f2961407fd31883fe31e9aff8c"
       },
       {
         "file": "skins/bottle-blue/v01/skin.json",
-        "bytes": 6696,
-        "sha256": "13b2c5dc13b3909d833632c04c046d2decb2d546825a2c1a07ee2b2902318322"
+        "bytes": 6757,
+        "sha256": "8583dfc88879d296f969688a4a58318a9f5f6e7f02b565cde2dc73c0ffbedb52"
       }
     ],
     "textures": [
@@ -273,15 +273,44 @@
       "lying"
     ],
     "defaultState": "closed",
-    "defaultSkin": "bottle-black@v01",
-    "skinsDir": "skins",
-    "scene": "scene/source-studio/v02/scene.json",
-    "camera": "camera/bottle.json",
-    "compatibility": {
-      "modelId": "bottle",
-      "uvLayout": "bottle-uv-v01",
-      "materialBindings": "bottle-materials-v01"
+    "skin": {
+      "compatibility": {
+        "modelId": "bottle",
+        "uvLayout": "bottle-uv-v01",
+        "materialBindings": "bottle-materials-v01"
+      },
+      "slots": [
+        "body.plastic",
+        "body.coating",
+        "steel.brushed",
+        "steel.handle",
+        "lid.bamboo",
+        "lid.seal",
+        "decoration"
+      ],
+      "default": "bottle-black@v01",
+      "dir": "skins"
     },
+    "scene": "scene/source-studio/v02/scene.json",
+    "shadow": {
+      "use": "soft-pcss@v01",
+      "params": {
+        "opacity": 0.48,
+        "color": "#242526",
+        "contact": 0.22,
+        "frames": 48,
+        "resolution": 1024,
+        "scale": 12,
+        "position": [
+          1,
+          0.002,
+          0
+        ],
+        "areaSamples": 8,
+        "contactSamples": 4
+      }
+    },
+    "camera": "camera/bottle.json",
     "hide": [
       "print_surface"
     ]

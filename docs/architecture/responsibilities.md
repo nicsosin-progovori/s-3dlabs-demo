@@ -5,7 +5,7 @@
 и где оно живёт. На основе этого ты решаешь, кто за что отвечает.
 
 Те же пометки стоят прямо в коде — грепай:
-`grep -rn "ЗО\[" app/src/objectEngine.ts app/src/ObjectViewer.tsx`
+`grep -rn "ЗО\[" app/src/player/engine/objectEngine.ts app/src/player/ObjectViewer.tsx app/src/player/components`
 
 ## Слои сейчас
 

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "shadow-declaration.schema.json",
+  "title": "Выбор тени объектом — manifest.render.shadow",
+  "description": "Объект обязан объявить тень. null — явно без тени. params проверяются дополнительно по params из shadow.json выбранной тени.",
+  "oneOf": [
+    {
+      "type": "null"
+    },
+    {
+      "type": "object",
+      "required": [
+        "use"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "use": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}@[a-z0-9][a-z0-9._-]{0,63}$",
+          "description": "<id>@<rev> пакета тени"
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    }
+  ]
+}

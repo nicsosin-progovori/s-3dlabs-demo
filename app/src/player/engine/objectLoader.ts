@@ -1,17 +1,16 @@
 /** GENERIC-загрузчик: знает только манифест и как резолвить ссылки.
  *  Никаких знаний о конкретном объекте здесь нет — интерпретацией занимается
- *  единый движок src/objectEngine.ts, читая данные из manifest.render. */
+ *  единый движок engine/objectEngine.ts, читая данные из manifest.render. */
 export interface ManifestPart { file: string; bytes: number; sha256: string }
 export interface ObjectRender {
   adapter?: string
   geometry?: { final?: string; low?: string }
   states?: string[]
   defaultState?: string
-  defaultSkin?: string
-  skinsDir?: string
+  /** поверхность скина объекта — app/contracts/skin-surface.schema.json */
+  skin?: import('../../../contracts/skin.ts').ObjectSkinSurface
   scene?: string
   camera?: string
-  compatibility?: Record<string, string>
 }
 export interface ObjectManifest {
   schemaVersion: number

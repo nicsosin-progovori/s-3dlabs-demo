@@ -2,10 +2,12 @@ import { Box3, Group, Vector3 } from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { LoadedObject } from './objectLoader'
 import { partUrl } from './objectLoader'
-import { loadSkin, bindSkin, type SkinBinding, type SkinBundle } from './skinLoader'
-import { compositionFrame } from './compositionCamera'
-import { validateSceneProfile } from '../shared/sceneContract.mjs'
-import { validateCameraViews } from '../shared/cameraViewsContract.mjs'
+import { loadSkin, bindSkin, type SkinBinding, type SkinBundle } from '../materials/skinLoader'
+import { parseSkinKey, skinFile, skinSurface } from '../materials/skinContract'
+import { loadShadow, sceneShadowLight, shadowDeclaration, type PreparedShadow, type SceneShadowLight } from '../sockets/shadowSocket'
+import { compositionFrame } from '../../compositionCamera'
+import { validateSceneProfile } from '../../../shared/sceneContract.mjs'
+import { validateCameraViews } from '../../../shared/cameraViewsContract.mjs'
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * КАРТА ЗОН ОТВЕТСТВЕННОСТИ (грепай по "ЗО[")
@@ -27,19 +29,21 @@ export interface BuiltObject {
   /** живая привязка скина — через неё меняем скин без перезагрузки геометрии */
   skin: SkinBinding | null
   skinKey: string | null
+  /** тень, которую выбрал объект (пакет из shadows/), и свет сцены для неё; null — объект явно без тени */
+  shadow: { prepared: PreparedShadow; light: SceneShadowLight } | null
   note: string
 }
 
-/** Скин "<id>@<rev>" из пакета объекта. Строго: нет в пакете — ошибка.
- *  ЗО[ОБЪЕКТ/КОНВЕНЦИЯ]: путь skins/<id>/<rev>/skin.json. ЗО[ПОЛИТИКА]: качество 'final', приоритет 'high'. */
+/** Скин "<id>@<rev>" из пакета объекта. Строго: у объекта нет render.skin или скина нет в пакете — ошибка.
+ *  ЗО[ОБЪЕКТ]: что объект принимает (совместимость, слоты, папка) — render.skin. ЗО[ПОЛИТИКА]: качество 'final', приоритет 'high'. */
 export async function loadSkinBundle(o: LoadedObject, skinKey: string, signal: AbortSignal): Promise<SkinBundle> {
-  const r: any = o.manifest.render ?? {}
-  const [sid, srev] = String(skinKey).split('@')
-  if (!sid || !srev) throw new Error(`Invalid skin key "${skinKey}"`)
-  const file = `${r.skinsDir ?? 'skins'}/${sid}/${srev}/skin.json`
+  const surface = skinSurface((o.manifest.render ?? {}) as Record<string, unknown>)
+  if (!surface) throw new Error(`Object ${o.manifest.id}@${o.manifest.revision} does not accept skins (no render.skin)`)
+  const ref = parseSkinKey(skinKey)
+  const file = skinFile(surface, ref)
   const entry = (o.manifest.parts.skins ?? []).find((f: any) => f.file === file)
   if (!entry) throw new Error(`Skin ${skinKey} is not in object ${o.manifest.id}@${o.manifest.revision}`)
-  return loadSkin({ id: sid, revision: srev }, 'final', signal, 'high', { basePath: o.base, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes } })
+  return loadSkin(ref, 'final', signal, 'high', { basePath: o.base, surface, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes } })
 }
 
 async function fetchJson(base: string, ref: string) {
@@ -70,16 +74,16 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
   if (hide.length) root.traverse(x => { if (hide.some(flag => (x as any).userData?.[flag])) x.visible = false })
   // ЗО[ОБЩЕЕ]: меши объекта кастуют/принимают тени — общее правило рендера (нужно студийным теням).
   root.traverse(x => { const m = x as any; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true } })
-  // ЗО[ОБЪЕКТ]: совместимость скина — данные объекта, движок только прокидывает в userData.
-  if (r.compatibility) root.userData.skinCompatibility = r.compatibility
+  // ЗО[ОБЪЕКТ]: совместимость скина объявляет объект (render.skin). GLB может объявить свою (extras сцены) —
+  // тогда она обязана совпасть с объектом (проверяет bindSkin). Движок её не подменяет.
 
   // ЗО[ОБЪЕКТ]: скин задаёт вызывающий (SKU); если не задан — дефолт объекта (render.defaultSkin).
   // Строго: скин не загрузился/не подошёл — ошибка всей сборки, без «геометрии без скина».
   let note = 'геометрия'
-  const useSkin: string | null = skinKey ?? r.defaultSkin ?? null
+  const useSkin: string | null = skinKey ?? r.skin?.default ?? null
   let skin: SkinBinding | null = null
   if (useSkin) {
-    skin = bindSkin({ root, productId: o.manifest.id, dispose: () => {} }, await loadSkinBundle(o, useSkin, signal))
+    skin = bindSkin({ root }, await loadSkinBundle(o, useSkin, signal))
     note = 'скин ' + useSkin
   }
 
@@ -93,6 +97,17 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
   if (r.scene) {
     try { const prof: any = validateSceneProfile(await fetchJson(o.base, r.scene)); scene = prof.settings; worldScale = prof.coordinates?.worldScale ?? 1; note += ' + сцена' }
     catch (e) { note += ' (сцена: ' + ((e as Error)?.message ?? e) + ')' }
+  }
+
+  // ЗО[ОБЪЕКТ]: тень выбирает объект (render.shadow → пакет из shadows/). Движок тень не содержит.
+  // ЗО[ГРАНИЦА]: направление и чёткость тени — от света СЦЕНЫ; вид тени — от пакета тени.
+  // Строго: объект обязан объявить тень (или null); пакет/параметры/свет не сошлись — ошибка сборки.
+  const shadowDecl = shadowDeclaration(r)
+  let shadow: BuiltObject['shadow'] = null
+  if (shadowDecl) {
+    const light = sceneShadowLight(scene)
+    shadow = { prepared: await loadShadow(shadowDecl, signal), light }
+    note += ' + тень ' + shadowDecl.use
   }
 
   // ЗО[ОБЪЕКТ]: ПАРАМЕТРЫ ракурсов (azimuth/elevation/fov/roll/subject/margin) везёт объект (render.camera).
@@ -151,6 +166,6 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
       near: view?.near ?? 0.025, far: view?.far ?? 100,
     },
     // ЗО[ПОЛИТИКА]: размер контактной тени = maxDim*1.5 — эвристика плеера, не данные объекта.
-    shadowScale: maxDim * 1.5, skin, skinKey: useSkin, note,
+    shadowScale: maxDim * 1.5, skin, skinKey: useSkin, shadow, note,
   }
 }
