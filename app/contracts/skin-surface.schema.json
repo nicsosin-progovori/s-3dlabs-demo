@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skin-surface.schema.json",
+  "title": "Поверхность скина объекта — manifest.render.skin",
+  "description": "Что объект принимает как скин: совместимость, слоты материалов, скин по умолчанию, папка скинов. Глобального реестра скинов нет. Документация: docs/architecture/02-skin.md, contracts.md.",
+  "type": "object",
+  "required": [
+    "compatibility",
+    "slots",
+    "default",
+    "dir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "compatibility": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "набор строк совместимости; объявляет объект, скин должен совпасть целиком"
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "слоты = extras.materialSlotId материалов в GLB; базовый скин закрывает все"
+    },
+    "default": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}@[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "скин по умолчанию; должен быть в manifest.parts.skins"
+    },
+    "dir": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._\\-/]+$",
+      "description": "папка скинов; путь скина — <dir>/<id>/<rev>/skin.json"
+    }
+  }
+}

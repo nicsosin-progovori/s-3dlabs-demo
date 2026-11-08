@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skin.schema.json",
+  "title": "Скин — <dir>/<id>/<rev>/skin.json в пакете объекта",
+  "description": "Базовый скин (всегда): материалы по слотам + текстуры low/final; необязательное улучшение (код). Подходит объекту, если compatibility совпадает с render.skin.compatibility, а слоты — ровно render.skin.slots. Документация: docs/architecture/02-skin.md, contracts.md.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "revision",
+    "compatibility",
+    "materials",
+    "profiles"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "compatibility": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "набор строк совместимости; объявляет объект, скин должен совпасть целиком"
+    },
+    "materials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "extras"
+        ],
+        "description": "материал слота — подмножество glTF 2.0 material",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "extras": {
+            "type": "object",
+            "required": [
+              "materialSlotId"
+            ],
+            "properties": {
+              "materialSlotId": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "doubleSided": {
+            "type": "boolean"
+          },
+          "alphaMode": {
+            "enum": [
+              "OPAQUE",
+              "MASK",
+              "BLEND"
+            ]
+          },
+          "alphaCutoff": {
+            "type": "number"
+          },
+          "pbrMetallicRoughness": {
+            "type": "object"
+          },
+          "normalTexture": {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "occlusionTexture": {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "emissiveTexture": {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "emissiveFactor": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "extensions": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "KHR_materials_clearcoat",
+                "KHR_materials_anisotropy"
+              ]
+            },
+            "description": "расширения, которые умеет загрузчик плеера"
+          }
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "required": [
+        "low",
+        "final"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "low": {
+          "type": "object",
+          "required": [
+            "images",
+            "textures",
+            "samplers"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "images": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "file",
+                  "sha256",
+                  "bytes",
+                  "width",
+                  "height",
+                  "mimeType"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string",
+                    "pattern": "^textures/[a-f0-9]{64}\\.png$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2097152
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2048
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2048
+                  },
+                  "mimeType": {
+                    "const": "image/png"
+                  }
+                }
+              }
+            },
+            "textures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "source"
+                ],
+                "properties": {
+                  "source": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "sampler": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "samplers": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "final": {
+          "type": "object",
+          "required": [
+            "images",
+            "textures",
+            "samplers"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "images": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "file",
+                  "sha256",
+                  "bytes",
+                  "width",
+                  "height",
+                  "mimeType"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string",
+                    "pattern": "^textures/[a-f0-9]{64}\\.png$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2097152
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2048
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2048
+                  },
+                  "mimeType": {
+                    "const": "image/png"
+                  }
+                }
+              }
+            },
+            "textures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "source"
+                ],
+                "properties": {
+                  "source": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "sampler": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "samplers": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "enhancement": {
+      "$ref": "skin-enhancement.schema.json"
+    }
+  }
+}

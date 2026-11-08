@@ -7,11 +7,10 @@ export interface ObjectRender {
   geometry?: { final?: string; low?: string }
   states?: string[]
   defaultState?: string
-  defaultSkin?: string
-  skinsDir?: string
+  /** поверхность скина объекта — app/contracts/skin-surface.schema.json */
+  skin?: import('../../../contracts/skin.ts').ObjectSkinSurface
   scene?: string
   camera?: string
-  compatibility?: Record<string, string>
 }
 export interface ObjectManifest {
   schemaVersion: number

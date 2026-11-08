@@ -8,7 +8,10 @@ _Статус: **на ревью** (8 ноя 2026). Касается тольк�
 app/contracts/
   shadow.schema.json             — пакет тени: shadows/<id>/<rev>/shadow.json
   shadow-declaration.schema.json — выбор тени объектом: manifest.render.shadow
+  skin-surface.schema.json       — что объект принимает как скин: manifest.render.skin
+  skin.schema.json               — скин: <dir>/<id>/<rev>/skin.json
   skin-enhancement.schema.json   — улучшение скина: поле "enhancement" в skin.json
+  skin.ts                        — типы скина
   shadow.ts                      — типы TypeScript для этих JSON (для кода плеера)
   skinEnhancement.ts
 ```
@@ -26,7 +29,8 @@ app/contracts/
 ```mermaid
 flowchart TD
   SKU["skus/&lt;SKU&gt;/sku.json<br/>simple: object + skin"] -->|object: id@rev| M["objects/&lt;id&gt;/&lt;rev&gt;/manifest.json"]
-  SKU -->|skin: id@rev| SK["objects/…/skins/&lt;id&gt;/&lt;rev&gt;/skin.json<br/>(sha в manifest.parts.skins)"]
+  SKU -->|skin: id@rev| SK["objects/…/&lt;dir&gt;/&lt;id&gt;/&lt;rev&gt;/skin.json<br/>sha в manifest.parts.skins<br/>skin.schema.json"]
+  M -->|render.skin: совместимость, слоты<br/>skin-surface.schema.json| SK
   SK -->|enhancement: file+sha256<br/>skin-enhancement.schema.json| EJ["…/enhancement.js"]
   M -->|render.scene| SC["scene.json<br/>свет: направление и чёткость тени"]
   M -->|render.shadow.use: id@rev<br/>shadow-declaration.schema.json| SH["shadows/&lt;id&gt;/&lt;rev&gt;/shadow.json<br/>shadow.schema.json"]
@@ -38,7 +42,8 @@ flowchart TD
 |---|---|---|---|---|
 | 1 | `skus/<SKU>/sku.json` | `player/engine/skuLoader.ts` | (пока код) | плеер `error` |
 | 2 | `objects/<id>/<rev>/manifest.json` | `player/engine/objectLoader.ts` | (пока код) | плеер `error` |
-| 3 | `…/skins/<id>/<rev>/skin.json` | `player/materials/skinLoader.ts` | (пока код; привязан к бутылке — issue #1) | плеер `error` |
+| 3 | `manifest.render.skin` | `player/materials/skinContract.ts` | `skin-surface.schema.json` | нет поля → объект без скинов; скин по SKU → `error` |
+| 3b | `<dir>/<id>/<rev>/skin.json` | `player/materials/skinLoader.ts` + `skinContract.ts` | `skin.schema.json`; совместимость и слоты — по `render.skin` | чужая совместимость / лишний или пропущенный слот → `error` |
 | 3a | `skin.json` → `enhancement` | `player/materials/skinEnhancement.ts` | `skin-enhancement.schema.json` | плеер `error` (TODO: откат к базовому скину) |
 | 4 | `manifest.render.shadow` | `player/sockets/shadowSocket.ts` | `shadow-declaration.schema.json` | нет поля / неверный ключ → `error`; `null` → без тени |
 | 5 | `shadows/<id>/<rev>/shadow.json` | `player/sockets/shadowSocket.ts` | `shadow.schema.json` | `error` |
@@ -54,4 +59,4 @@ flowchart TD
 - Версии: формат файла — `schemaVersion`; API кода пакета — `apiVersion`. Изменение любой из них — ревью.
 - Код из пакета грузится только после проверки размера и sha256.
 - Ошибки строгие: несоответствие контракту — ошибка показа, без молчаливых умолчаний (кроме явных `default` в контракте).
-- Звенья 1–3 пока описаны только кодом — их схемы добавляем по мере работы над ними (звено 3 — следующий шаг issue #1).
+- Звенья 1–2 (SKU, манифест объекта целиком) пока описаны только кодом — схемы добавляем по мере работы над ними.

@@ -1,35 +1,22 @@
 import {DoubleSide,FrontSide,LinearFilter,LinearMipmapLinearFilter,LinearMipmapNearestFilter,LinearSRGBColorSpace,Mesh,MeshPhysicalMaterial,MeshStandardMaterial,MirroredRepeatWrapping,NearestFilter,NearestMipmapLinearFilter,NearestMipmapNearestFilter,NoColorSpace,RepeatWrapping,ClampToEdgeWrapping,SRGBColorSpace,Texture} from 'three'
 // Копия загрузчика скинов ДЛЯ ПЛЕЕРА (старая студия — src/skinLoader.ts, не трогаем).
 // Отличия: улучшение скина (код) через пул материалов; движок не вешает тени (тень — пакет, sockets/shadowSocket.ts).
-// TODO(I-01): skinContract/bottleSkins.json и compatible() — привязка к бутылке, следующий шаг issue #1.
-import {skinDescriptor,normaliseSkin,SKIN_COMPATIBILITY} from '../../../shared/skinContract.mjs'
-import type {SkinRef,SkinCompatibility} from '../../../shared/skinContract.mjs'
+// Issue #1: глобального реестра скинов (bottleSkins.json) здесь нет. Что принимает объект — объявляет
+// сам объект (manifest.render.skin), скин сверяется с ним (skinContract.ts). Контракт данных — app/contracts/skin*.
+import type {ObjectSkinSurface,SkinManifest,SkinProfile as Profile,SkinQuality,SkinRef,SkinTextureInfo as TextureInfo} from '../../../contracts/skin.ts'
+import {sameCompatibility,validateGeometrySkinSurface,validateSkinManifest} from './skinContract.ts'
 import {SkinResourceCache,SkinFetchQueue} from '../../skinResources'
 import type {ResourceLease} from '../../skinResources'
-import {attachEnhancement,prepareEnhancement,validateEnhancementRef} from './skinEnhancement'
-import type {PreparedSkinEnhancement,SkinEnhancementRef} from './skinEnhancement'
+import {attachEnhancement,prepareEnhancement} from './skinEnhancement'
+import type {PreparedSkinEnhancement} from './skinEnhancement'
 import type {Material} from 'three'
 import type {Object3D} from 'three'
 /** Что нужно привязке скина от модели: только корень сцены объекта. */
 export interface SkinTargetModel {root:Object3D}
 
-export type SkinQuality='low'|'final'
-interface ImageAsset {name:string;file:string;sha256:string;bytes:number;width:number;height:number;mimeType:string}
-interface Transform {offset?:[number,number];scale?:[number,number];rotation?:number;texCoord?:number}
-interface TextureInfo {index:number;texCoord?:number;scale?:number;strength?:number;extensions?:{KHR_texture_transform?:Transform}}
-interface MaterialDef {
-  name:string;extras:{materialSlotId:string};doubleSided?:boolean;alphaMode?:string;alphaCutoff?:number
-  pbrMetallicRoughness?:{baseColorFactor?:[number,number,number,number];metallicFactor?:number;roughnessFactor?:number;baseColorTexture?:TextureInfo;metallicRoughnessTexture?:TextureInfo}
-  normalTexture?:TextureInfo;occlusionTexture?:TextureInfo;emissiveTexture?:TextureInfo;emissiveFactor?:[number,number,number]
-  extensions?:{
-    KHR_materials_clearcoat?:{clearcoatFactor?:number;clearcoatRoughnessFactor?:number;clearcoatTexture?:TextureInfo;clearcoatRoughnessTexture?:TextureInfo;clearcoatNormalTexture?:TextureInfo}
-    KHR_materials_anisotropy?:{anisotropyStrength?:number;anisotropyRotation?:number;anisotropyTexture?:TextureInfo}
-  }
-}
-interface Profile {images:ImageAsset[];textures:Array<{source:number;sampler?:number}>;samplers:Array<{wrapS?:number;wrapT?:number;magFilter?:number;minFilter?:number}>}
-interface SkinManifest extends SkinRef {schemaVersion:number;compatibility:SkinCompatibility;materials:MaterialDef[];profiles:Record<SkinQuality,Profile>;enhancement?:SkinEnhancementRef}
+export type {SkinQuality}
 /** Базовый скин (materials) всегда; улучшение (код) — только если объявлено в skin.json. */
-export interface SkinBundle {ref:SkinRef;materials:Map<string,MeshStandardMaterial>;enhancement:PreparedSkinEnhancement|null;dispose:()=>void}
+export interface SkinBundle {ref:SkinRef;surface:ObjectSkinSurface;materials:Map<string,MeshStandardMaterial>;enhancement:PreparedSkinEnhancement|null;dispose:()=>void}
 const manifests=new SkinResourceCache<SkinManifest>(16,16,()=>1,()=>{})
 const images=new SkinResourceCache<ImageBitmap>(16*1024*1024,32,v=>v.width*v.height*4,v=>v.close())
 interface OwnedTexture {texture:Texture;image:ResourceLease<ImageBitmap>;bytes:number}
@@ -45,22 +32,6 @@ async function bytes(file:string,hash:string,size:number,signal:AbortSignal,prio
     if(data.byteLength!==size||await digest(data)!==hash)throw new Error('Skin resource integrity mismatch')
     signal.throwIfAborted();return data
   })
-}
-const compatible=(value:SkinCompatibility)=>value?.modelId===SKIN_COMPATIBILITY.modelId&&value?.uvLayout===SKIN_COMPATIBILITY.uvLayout&&value?.materialBindings===SKIN_COMPATIBILITY.materialBindings
-function validateManifest(manifest:SkinManifest,ref:SkinRef){
-  if(manifest.schemaVersion!==1||manifest.id!==ref.id||manifest.revision!==ref.revision||!compatible(manifest.compatibility))throw new Error('Incompatible skin manifest')
-  if(!Array.isArray(manifest.materials)||manifest.materials.length!==7)throw new Error('Invalid material slots')
-  const slots=new Set<string>()
-  for(const m of manifest.materials){
-    if(!m.extras?.materialSlotId||slots.has(m.extras.materialSlotId))throw new Error('Duplicate or missing material slot')
-    slots.add(m.extras.materialSlotId)
-    if(Object.keys(m.extensions??{}).some(k=>!['KHR_materials_clearcoat','KHR_materials_anisotropy'].includes(k)))throw new Error('Unsupported material extension')
-  }
-  if(manifest.enhancement!==undefined)validateEnhancementRef(manifest.enhancement)
-  for(const profile of Object.values(manifest.profiles)){
-    if(!Array.isArray(profile.images)||profile.images.length>32)throw new Error('Invalid texture profile')
-    for(const im of profile.images)if(!/^[a-f0-9]{64}$/.test(im.sha256)||im.file!=='textures/'+im.sha256+'.png'||im.mimeType!=='image/png'||im.bytes<=0||im.bytes>2*1024*1024||im.width<1||im.height<1||im.width>2048||im.height>2048)throw new Error('Invalid skin image')
-  }
 }
 const wrap=(value=10497)=>({10497:RepeatWrapping,33071:ClampToEdgeWrapping,33648:MirroredRepeatWrapping}[value]??RepeatWrapping)
 const minFilter=(value=9987)=>({9728:NearestFilter,9729:LinearFilter,9984:NearestMipmapNearestFilter,9985:LinearMipmapNearestFilter,9986:NearestMipmapLinearFilter,9987:LinearMipmapLinearFilter}[value]??LinearMipmapLinearFilter)
@@ -90,12 +61,15 @@ async function textureLease(info:TextureInfo,profile:Profile,color:boolean,signa
     }catch(error){image.release();throw error}
   },signal)
 }
-export async function loadSkin(input:SkinRef,quality:SkinQuality,signal:AbortSignal,priority:RequestPriority='high',resources?:{basePath?:string;descriptor?:{file:string;sha256:string;bytes:number}}):Promise<SkinBundle>{
-  const ref=normaliseSkin(input),base=resources?.basePath,descriptor=resources?.descriptor??skinDescriptor(ref)
+/** Загрузить скин объекта. descriptor — запись из manifest.parts.skins (sha), surface — manifest.render.skin. */
+export async function loadSkin(input:SkinRef,quality:SkinQuality,signal:AbortSignal,priority:RequestPriority,resources:{basePath:string;descriptor:{file:string;sha256:string;bytes:number};surface:ObjectSkinSurface}):Promise<SkinBundle>{
+  const ref={id:input.id,revision:input.revision},base=resources.basePath,descriptor=resources.descriptor,surface=resources.surface
   const manifestLease=await manifests.acquire(descriptor.sha256,async resourceSignal=>{
     const data=await bytes(descriptor.file,descriptor.sha256,descriptor.bytes,resourceSignal,priority,base)
-    const manifest=JSON.parse(new TextDecoder().decode(data)) as SkinManifest;validateManifest(manifest,ref);return manifest
+    return JSON.parse(new TextDecoder().decode(data)) as SkinManifest
   },signal)
+  // сверка с ОБЪЕКТОМ — каждый раз (один и тот же skin.json по sha мог прийти от другого объекта)
+  try{validateSkinManifest(manifestLease.value,ref,surface)}catch(error){manifestLease.release();throw error}
   const controller=new AbortController(),combined=AbortSignal.any([signal,controller.signal]),leases:ResourceLease<OwnedTexture>[]=[],materials=new Map<string,MeshStandardMaterial>()
   const manifest=manifestLease.value,profile=manifest.profiles[quality]
   const jobs=manifest.materials.map(async definition=>{
@@ -141,7 +115,7 @@ export async function loadSkin(input:SkinRef,quality:SkinQuality,signal:AbortSig
       //   Решение владельца (7 ноя 2026): пока строго; откат — отдельным решением.
       enhancement=await prepareEnhancement(extra,ref,quality,await bytes(extra.file,extra.sha256,extra.bytes,combined,priority,base),combined)
     }
-    return {ref,materials,enhancement,dispose}
+    return {ref,surface,materials,enhancement,dispose}
   }
   catch(error){controller.abort();await Promise.allSettled(jobs);dispose();throw error}
 }
@@ -152,7 +126,8 @@ export interface SkinBinding {
   dispose:()=>void
 }
 export function bindSkin(model:SkinTargetModel,initial:SkinBundle):SkinBinding{
-  if(!compatible(model.root.userData.skinCompatibility))throw new Error('Geometry skin contract mismatch')
+  validateGeometrySkinSurface(model.root.userData.skinCompatibility,initial.surface)
+  const declared=new Set(initial.surface.slots)
   type Features={derivativeTangents:boolean;vertexColors:boolean;flatShading:boolean}
   const features=(mesh:Mesh):Features=>({derivativeTangents:!mesh.geometry.attributes.tangent,vertexColors:!!mesh.geometry.attributes.color,flatShading:!mesh.geometry.attributes.normal})
   const adapt=(material:MeshStandardMaterial,flags:Features)=>{
@@ -172,6 +147,7 @@ export function bindSkin(model:SkinTargetModel,initial:SkinBundle):SkinBinding{
     if(!(o instanceof Mesh))return
     const apply=(original:MeshStandardMaterial)=>{
       const slot=original.userData.materialSlotId,recipe=initial.materials.get(slot)
+      if(!declared.has(slot))throw new Error('Geometry material slot '+String(slot)+' is not declared in render.skin.slots')
       if(!recipe)throw new Error('Missing material slot '+String(slot))
       const flags=features(o),key=slot+JSON.stringify(flags)
       if(!live.has(key))live.set(key,{slot,target:adapt(recipe.clone(),flags),flags})
@@ -186,6 +162,7 @@ export function bindSkin(model:SkinTargetModel,initial:SkinBundle):SkinBinding{
     ref:{...initial.ref},
     apply(bundle){
       if(disposed)throw new Error('Skin binding closed')
+      if(!sameCompatibility(bundle.surface.compatibility,initial.surface.compatibility))throw new Error('Skin belongs to another object surface')
       for(const {slot,target}of live.values()){const recipe=bundle.materials.get(slot);if(!recipe||target.type!==recipe.type)throw new Error('Incompatible material class')}
       enhanced?.dispose();enhanced=null
       for(const {slot,target,flags}of live.values()){target.copy(bundle.materials.get(slot)!);adapt(target,flags);target.needsUpdate=true}

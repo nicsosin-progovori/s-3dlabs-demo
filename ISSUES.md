@@ -13,7 +13,7 @@ _Заведено 7 ноя 2026 при попытке перенести вто�
 
 ---
 
-- [#1](https://github.com/nicsosin∆-progovori/s-3dlabs-demo/issues/1) · Скины зашиты под бутылку _(бывш. I-01)_
+- [#1](https://github.com/nicsosin-progovori/s-3dlabs-demo/issues/1) · Скины зашиты под бутылку _(бывш. I-01)_
 
 ## I-02 · Позы, состояния и анимация — код под конкретный объект — `discuss`
 **Где:** `app/src/endoMotion.ts` (риг 129 костей, интеграция ремня, коробка/крышка), `EndoScene.tsx`, `bottleMotion.ts`, `bottleCameraMotion.ts`.
