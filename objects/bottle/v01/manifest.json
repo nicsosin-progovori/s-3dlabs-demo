@@ -276,6 +276,24 @@
     "defaultSkin": "bottle-black@v01",
     "skinsDir": "skins",
     "scene": "scene/source-studio/v02/scene.json",
+    "shadow": {
+      "use": "soft-pcss@v01",
+      "params": {
+        "opacity": 0.48,
+        "color": "#242526",
+        "contact": 0.22,
+        "frames": 48,
+        "resolution": 1024,
+        "scale": 12,
+        "position": [
+          1,
+          0.002,
+          0
+        ],
+        "areaSamples": 8,
+        "contactSamples": 4
+      }
+    },
     "camera": "camera/bottle.json",
     "compatibility": {
       "modelId": "bottle",
