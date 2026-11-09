@@ -43,10 +43,11 @@ _Решения владельца по [#4](https://github.com/nicsosin-progovo
 **Как устроено в плеере.**
 ```mermaid
 flowchart LR
-  O[objectEngine.buildFromManifest<br/>объект БЕЗ сцены] --> P[placeInScene<br/>масштаб, кадр, свет для тени]
+  O[objectEngine.buildFromManifest<br/>объект БЕЗ сцены] --> P[placement.placeInScene<br/>масштаб, кадр, свет для тени]
   K[render.scenes 0 / команда хоста s3d:scene] --> L[sceneLoader.loadScene<br/>/scenes/id/rev/scene.json]
   L --> V[sceneContract.validateSceneProfile] --> P
   P --> R[Rig, Backdrop, ShadowSlot, CameraFilm]
+  L --> C[sceneSocket.loadSceneCode<br/>code: sha256] --> S[SceneSlot<br/>код сцены поверх адаптера]
 ```
 - Контракт: `app/contracts/scene.schema.json`, `scene-declaration.schema.json`, типы `scene.ts`; проверка — `player/scenes/sceneContract.ts`
   (те же правила, что `shared/sceneContract.mjs`, кроме: `worldScale` — любое > 0, разрешены `$schema` и `label`). Плеер от `shared/sceneContract.mjs` отвязан.
@@ -54,7 +55,24 @@ flowchart LR
 - Плеер читает из сцены: `exposure`, `background`, `ambient`, `hemisphere`, `key`, `fill`, `environment`, `shadow.radius`, `shadow.lightMapSize`.
   Остальное (`shadow.*` вида тени, `shadowMap`, `ao`, `revealMs`, `shadowType`) — наследие студии, проверяется, но не используется (I-10).
 
-**Открыто.** Камеры и лимиты орбиты при смене сцены (I-03, отложено): кадр пересчитывается, но near/far и лимиты орбиты —
+**Код сцены — слот (заложено 9 ноя 2026).** Сцена может привезти свой код: `scene.json → code`:
+```json
+"code": { "apiVersion": 1, "entry": { "file": "scene.js", "sha256": "…", "bytes": 1234 }, "params": { … } }
+```
+- Код вставляется в **слот сцены** (`components/SceneSlot.tsx`) **поверх** встроенного адаптера (Rig, Backdrop):
+  адаптер рисует то, что сказано данными; код — то, что данными не выразить (AO, циклорама, свой тон-маппинг, сложный свет).
+- Модуль: `export default { apiVersion: 1, create(ctx) → { update?, render?, resize?, dispose } }`. `ctx` — `three`, `renderer`,
+  three-сцена кадра, проверенный профиль, `params`, размер. Интерфейс — `player/sockets/sceneSocket.ts`.
+- `render(frame)` есть → **код рисует кадр сам** (постобработка), плеер не рисует. Нет → плеер рисует как обычно.
+- Сцена **не получает объект** (она продукт-агностична). Доступ к материалам объекта — вместе с требованиями сцены (I-10).
+- Смена сцены = `dispose()` старого кода, `create()` нового. Всё, что код добавил, он убирает в `dispose()`.
+- Код проверяется по размеру и sha256 до исполнения; любая ошибка — ошибка показа.
+- Первое применение — вид старой студии (ISSUES.md I-12).
+
+**Где правила.** Выбор сцены — `player/engine/scenePolicy.ts`; расстановка объекта в сцене — `player/engine/placement.ts`.
+Тесты смены сцены — `app/scripts/scene-switch.test.mjs` (`npm run test:player`).
+
+**Открыто.** Единица мира — метр, сцена 1:1 (I-11, на ревью). Камеры и лимиты орбиты при смене сцены (I-03, отложено): кадр пересчитывается, но near/far и лимиты орбиты —
 в единицах сцены, «чья камера» не решено. Параметры `soft-pcss` в мировых единицах (`scale`, `position`) верны только для `worldScale: 12` (I-10).
 
 ---

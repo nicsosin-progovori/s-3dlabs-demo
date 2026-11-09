@@ -49,6 +49,17 @@ export interface SceneSettings {
   revealMs: number
 }
 
+/** Необязательный код сцены (ES-модуль) — вставляется в слот сцены плеера.
+ *  Интерфейс модуля — src/player/sockets/sceneSocket.ts. */
+export interface SceneCode {
+  /** версия API слота сцены */
+  apiVersion: 1
+  /** путь от папки сцены; проверяется по размеру и sha256 до исполнения */
+  entry: { file: string; sha256: string; bytes: number }
+  /** параметры кода; форму проверяет сам код */
+  params?: Record<string, unknown>
+}
+
 /** scenes/<id>/<rev>/scene.json */
 export interface SceneProfile {
   $schema?: string
@@ -57,6 +68,8 @@ export interface SceneProfile {
   revision: string
   label?: Record<string, string>
   engine: 'source-studio-v01'
+  /** нет — сцена только данными (встроенный адаптер) */
+  code?: SceneCode
   coordinates: SceneCoordinates
   settings: SceneSettings
 }

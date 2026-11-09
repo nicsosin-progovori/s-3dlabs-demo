@@ -38,6 +38,7 @@ flowchart TD
   M -->|render.scenes: [id@rev, …] — первая<br/>scene-declaration.schema.json| SC["scenes/&lt;id&gt;/&lt;rev&gt;/scene.json<br/>scene.schema.json"]
   H["хост: s3d:scene"] -.->|смена сцены у показанного объекта| SC
   SC -->|свет: направление и чёткость тени<br/>needsFromScene| SH
+  SC -->|code: file+sha256| SCJ["scenes/…/scene.js<br/>слот сцены"]
   M -->|render.shadow.use: id@rev<br/>shadow-declaration.schema.json| SH["shadows/&lt;id&gt;/&lt;rev&gt;/shadow.json<br/>shadow.schema.json"]
   SH -->|entry: file+sha256| SJ["shadows/…/shadow.js"]
   M -->|render.shadow.params| P["проверка по SH.params"]
@@ -57,6 +58,7 @@ flowchart TD
 | 6 | `manifest.render.scenes` | `player/scenes/sceneContract.ts` (`sceneDeclaration`) | `scene-declaration.schema.json` | нет поля / пусто / неверный ключ / дубль → `error` |
 | 6a | `manifest.render.units`, `render.scale` | `objectToMetres` | `scene.ts` (`ObjectUnits`); `scale` > 0, по умолчанию 1 | неизвестные единицы / неверная поправка → `error` |
 | 7 | `scenes/<id>/<rev>/scene.json` | `player/scenes/sceneLoader.ts` + `sceneContract.ts` | `scene.schema.json`, ≤ 64 КиБ | нет файла / битый JSON / вне контракта / чужая identity → `error` (и при смене сцены хостом) |
+| 7b | `scene.json` → `code` + код сцены | `player/sockets/sceneSocket.ts` + `packages/packageCode.ts` | `scene.schema.json` (`code`); размер + sha256, `apiVersion` | `error` |
 | 7a | свет сцены для тени | `shadowLightFromScene` (`shadowSocket.ts`) | `needsFromScene` тени + `key.position`, `shadow.radius`, `shadow.lightMapSize` | чего-то нет → `error` (проверяется при каждой смене сцены) |
 
 Пути: объекты — `/objects/`, SKU — `/skus/`, тени — `/shadows/`, сцены — `/scenes/` (сервер, `OBJECTS_DIR` / `SKUS_DIR` / `SHADOWS_DIR` / `SCENES_DIR`). Пути внутри пакетов — от папки пакета, без `..` и без ведущего `/`.

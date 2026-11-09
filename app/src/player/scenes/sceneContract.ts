@@ -1,5 +1,5 @@
-import type { ObjectUnits, SceneDeclaration, SceneProfile, SceneSettings, Vec3 } from '../../../contracts/scene.ts'
-export type { ObjectUnits, SceneDeclaration, SceneProfile, SceneSettings }
+import type { ObjectUnits, SceneCode, SceneDeclaration, SceneProfile, SceneSettings, Vec3 } from '../../../contracts/scene.ts'
+export type { ObjectUnits, SceneCode, SceneDeclaration, SceneProfile, SceneSettings }
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * КОНТРАКТ СЦЕНЫ в плеере. Сцена — отдельная сущность: scenes/<id>/<rev>/scene.json.
@@ -10,7 +10,8 @@ export type { ObjectUnits, SceneDeclaration, SceneProfile, SceneSettings }
  *
  * Проверки — те же, что у старой студии (shared/sceneContract.mjs), кроме:
  *   • worldScale — свойство сцены (любое > 0), а не константа 12;
- *   • разрешены "$schema" и "label".
+ *   • разрешены "$schema" и "label";
+ *   • необязательный "code" — код сцены для слота (sockets/sceneSocket.ts).
  * Данные — app/contracts/scene.schema.json (+ типы contracts/scene.ts).
  * Ошибки строгие: сцена не прошла — показ невозможен.
  * ──────────────────────────────────────────────────────────────────────────── */
@@ -18,9 +19,13 @@ export type { ObjectUnits, SceneDeclaration, SceneProfile, SceneSettings }
 export const SCENE_SCHEMA = 1
 export const SCENE_ENGINE = 'source-studio-v01'
 export const SCENE_MAX_BYTES = 64 * 1024
+export const SCENE_API_VERSION = 1
+export const SCENE_CODE_MAX_BYTES = 512 * 1024
 
 const KEY = /^([a-z0-9][a-z0-9-]{0,63})@([a-z0-9][a-z0-9._-]{0,63})$/
 const COLOR = /^#[a-fA-F0-9]{6}$/
+const SHA = /^[a-f0-9]{64}$/
+const CODE_FILE = /^(?!\/)(?!.*\.\.)[A-Za-z0-9._\-/]+\.m?js$/
 const RESOLUTIONS = [128, 256, 512, 1024, 2048, 4096]
 
 export interface SceneRef { id: string; revision: string }
@@ -77,6 +82,14 @@ function light(v: any, name: string) {
   obj(v, name, ['position', 'target', 'color', 'intensity'])
   return { position: vec(v.position, name + ' position'), target: vec(v.target, name + ' target'), color: color(v.color, name), intensity: num(v.intensity, name + ' intensity', 0, 20) }
 }
+function code(v: any): SceneCode {
+  obj(v, 'code', ['apiVersion', 'entry'], ['params'])
+  if (v.apiVersion !== SCENE_API_VERSION) throw new Error(`Scene code API ${String(v.apiVersion)} is not supported (player: ${SCENE_API_VERSION})`)
+  const e = obj(v.entry, 'code entry', ['file', 'sha256', 'bytes'])
+  if (typeof e.file !== 'string' || !CODE_FILE.test(e.file) || typeof e.sha256 !== 'string' || !SHA.test(e.sha256) || !Number.isInteger(e.bytes) || e.bytes <= 0 || e.bytes > SCENE_CODE_MAX_BYTES) throw fail('code entry')
+  if (v.params !== undefined && (!v.params || typeof v.params !== 'object' || Array.isArray(v.params))) throw fail('code params')
+  return { apiVersion: SCENE_API_VERSION, entry: { file: e.file, sha256: e.sha256, bytes: e.bytes }, ...(v.params ? { params: structuredClone(v.params) } : {}) }
+}
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) }
   return value
@@ -84,7 +97,7 @@ function freeze<T>(value: T): T {
 
 /** Проверить scene.json и вернуть замороженный профиль. expected — какую сцену просили (папка). */
 export function validateSceneProfile(value: any, expected?: SceneRef): SceneProfile {
-  obj(value, 'profile', ['schemaVersion', 'id', 'revision', 'engine', 'coordinates', 'settings'], ['$schema', 'label'])
+  obj(value, 'profile', ['schemaVersion', 'id', 'revision', 'engine', 'coordinates', 'settings'], ['$schema', 'label', 'code'])
   if (value.schemaVersion !== SCENE_SCHEMA) throw fail('schemaVersion')
   if (value.engine !== SCENE_ENGINE) throw new Error(`Scene engine "${String(value.engine)}" is not supported (player: ${SCENE_ENGINE})`)
   const ref = parseSceneKey(`${value.id}@${value.revision}`)
@@ -135,6 +148,7 @@ export function validateSceneProfile(value: any, expected?: SceneRef): SceneProf
   if (Math.abs(settings.shadow.position[1] - 0.002) > 0.000001) throw new Error('Incompatible shadow receiver height')
   return freeze({
     schemaVersion: SCENE_SCHEMA, id: ref.id, revision: ref.revision, ...(label ? { label } : {}), engine: SCENE_ENGINE,
+    ...(value.code !== undefined ? { code: code(value.code) } : {}),
     coordinates: { modelUnits: 'metres', worldScale: c.worldScale, up: 'Y', groundY: 0, front: '+Z' },
     settings,
   })

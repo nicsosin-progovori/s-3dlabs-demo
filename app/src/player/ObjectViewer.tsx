@@ -4,13 +4,16 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { MathUtils, Vector3 } from 'three'
 import { loadObjectManifest, type LoadedObject } from './engine/objectLoader'
-import { buildFromManifest, loadSkinBundle, placeInScene, type BuiltObject, type Placement } from './engine/objectEngine'
+import { buildFromManifest, loadSkinBundle, type BuiltObject } from './engine/objectEngine'
+import { placeInScene, type Placement } from './engine/placement'
+import { sceneCommandApplies, sceneOnLoad } from './engine/scenePolicy'
 import { loadSku } from './engine/skuLoader'
 import { PLAYER_ROOT_ID, onLoad, onScene, readSku, reportScene } from './engine/playerContract'
 import { loadScene } from './scenes/sceneLoader'
 import { Backdrop } from './components/Backdrop'
 import { Rig } from './components/Rig'
 import { ShadowSlot } from './components/ShadowSlot'
+import { SceneSlot } from './components/SceneSlot'
 import { CameraFilm } from './components/CameraFilm'
 import { MaterialFrames } from './components/MaterialFrames'
 import './objectViewer.css'
@@ -61,7 +64,7 @@ interface Current { object: string; loaded: LoadedObject; built: BuiltObject; pl
 
 /** Цвет страницы-подложки до/за 3D — из сцены. */
 function pageBackground(placed: Placement | null) {
-  document.body.style.background = placed ? placed.scene.settings.background.bottom : ''
+  document.body.style.background = placed ? placed.scene.profile.settings.background.bottom : ''
 }
 
 function Viewer() {
@@ -77,7 +80,7 @@ function Viewer() {
   const drop = useCallback(() => { current.current?.built.skin?.dispose(); current.current = null; reportScene(null); pageBackground(null) }, [])
   const show = useCallback((sku: string, cur: Current) => {
     setPs({ state: 'ready', sku, built: cur.built, placed: cur.placed })
-    reportScene(cur.placed.sceneKey)
+    reportScene(cur.placed.scene.key)
     pageBackground(cur.placed)
   }, [])
 
@@ -108,15 +111,12 @@ function Viewer() {
       const loaded = await loadObjectManifest(id, rev)
       const built = await buildFromManifest(loaded, signal, rec.skin)
       if (signal.aborted) { built.skin?.dispose(); return }
-      // ЗО[ОБЪЕКТ]: сцену выбирает объект — первая из render.scenes (порядок = приоритет).
-      //   При загрузке объект ведёт: прежний выбор хоста не учитывается.
-      // ЗО[ПОЛИТИКА]: подбор лучшей сцены для 1+ объектов — позже; сейчас всегда первая.
-      const sceneKey = built.scenes[0]
+      // ЗО[ОБЪЕКТ]: сцену выбирает объект (engine/scenePolicy.ts): при загрузке ведёт объект.
       let placed: Placement
       try {
-        const scene = await loadScene(sceneKey, signal)
+        const scene = await loadScene(sceneOnLoad(built.scenes), signal)
         if (signal.aborted) { built.skin?.dispose(); return }
-        placed = placeInScene(built, sceneKey, scene, playerViewport())
+        placed = placeInScene(built, scene, playerViewport())
       } catch (e) { built.skin?.dispose(); throw e }
       const next: Current = { object: rec.object, loaded, built, placed }
       current.current = next
@@ -133,15 +133,15 @@ function Viewer() {
   useEffect(() => {
     if (!sceneReq) return
     const cur = current.current
-    if (!cur || cur.placed.sceneKey === sceneReq.key) return   // объекта нет — сцену при загрузке выберет объект
+    if (!cur || !sceneCommandApplies(cur.placed.scene.key, sceneReq.key)) return   // объекта нет — сцену при загрузке выберет объект
     const ctrl = new AbortController(), signal = ctrl.signal
     const stale = () => signal.aborted || current.current !== cur
     ;(async () => {
       const scene = await loadScene(sceneReq.key, signal)
       if (stale()) return
-      cur.placed = placeInScene(cur.built, sceneReq.key, scene, playerViewport())
+      cur.placed = placeInScene(cur.built, scene, playerViewport())
       setPs(prev => prev.state === 'ready' && prev.built === cur.built ? { ...prev, placed: cur.placed } : prev)
-      reportScene(cur.placed.sceneKey)
+      reportScene(cur.placed.scene.key)
       pageBackground(cur.placed)
     })().catch(e => {
       if (stale()) return
@@ -153,24 +153,26 @@ function Viewer() {
 
   // состояние наружу — атрибутом на корне (пригодится для обратной связи)
   useEffect(() => { const r = document.getElementById(PLAYER_ROOT_ID); if (r) r.dataset.state = ps.state }, [ps.state])
-  // строго: тень не встала — показ объекта считается неудачным, ничего «старого» не оставляем
-  const failShadow = useCallback((e: unknown) => {
+  // строго: тень или код сцены не встали — показ объекта считается неудачным, ничего «старого» не оставляем
+  const fail = useCallback((what: string, e: unknown) => {
     drop()
-    setPs(prev => prev.state === 'ready' ? { state: 'error', sku: prev.sku, reason: 'shadow: ' + ((e as Error)?.message ?? String(e)) } : prev)
+    setPs(prev => prev.state === 'ready' ? { state: 'error', sku: prev.sku, reason: what + ': ' + ((e as Error)?.message ?? String(e)) } : prev)
   }, [drop])
+  const failShadow = useCallback((e: unknown) => fail('shadow', e), [fail])
+  const failScene = useCallback((e: unknown) => fail('scene', e), [fail])
   const built = ps.state === 'ready' ? ps.built : null
   const placed = ps.state === 'ready' ? ps.placed : null
   const limits = useMemo(() => placed ? orbitLimits(new Vector3(...placed.camera.position), new Vector3(...placed.camera.target)) : null, [placed])
   if (ps.state !== 'ready' || !built || !placed || !limits) return <StateView s={ps.state === 'ready' ? { state: 'loading', sku: ps.sku } : ps} />
-  const settings = placed.scene.settings
+  const settings = placed.scene.profile.settings, sceneKey = placed.scene.key
   return (
     <>
-      <div className="badge">{ps.sku} — {current.current?.object} · {built.note} · сцена {placed.sceneKey}</div>
+      <div className="badge">{ps.sku} — {current.current?.object} · {built.note} · сцена {sceneKey}{placed.scene.code ? ' + код' : ''}</div>
       {/* alpha:false — непрозрачный холст, видимый фон даёт 3D-задник сцены */}
       <Canvas camera={{ position: placed.camera.position, fov: placed.camera.fov, near: placed.camera.near, far: placed.camera.far }} dpr={[1, 2]} gl={{ alpha: false }} shadows>
         <Backdrop bg={settings.background} />
         {/* key: окружение для отражений запекается один раз — при смене сцены пересоздаём */}
-        <Rig key={placed.sceneKey} p={settings} />
+        <Rig key={sceneKey} p={settings} />
         <primitive object={built.root} />
         <MaterialFrames root={built.root} />
         {built.shadow && placed.shadowLight && <ShadowSlot subject={built.root} prepared={built.shadow} light={placed.shadowLight} onError={failShadow} />}
@@ -178,6 +180,8 @@ function Viewer() {
           minDistance={0.6} maxDistance={limits.maxDistance} minPolarAngle={0.08} maxPolarAngle={limits.maxPolarAngle}
           target={placed.camera.target} />
         <CameraFilm cam={placed.camera} />
+        {/* слот сцены: её код (если есть) — поверх встроенного адаптера; по ключу — пересоздаётся при смене сцены */}
+        <SceneSlot key={sceneKey} scene={placed.scene} onError={failScene} />
       </Canvas>
     </>
   )

@@ -7,6 +7,7 @@
 ```
 <id>/<revision>/
   scene.json — профиль сцены (контракт: app/contracts/scene.schema.json)
+  scene.js   — необязательный код сцены (scene.json → code, проверка по sha256) — слот сцены в плеере
 ```
 
 Сейчас: `source-studio/v01`, `source-studio/v02` — студия Source (перенесены из пакета бутылки, #4).
