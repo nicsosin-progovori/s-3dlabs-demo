@@ -14,6 +14,7 @@ _Заведено 7 ноя 2026 при попытке перенести вто�
 ---
 
 - [#1](https://github.com/nicsosin-progovori/s-3dlabs-demo/issues/1) · Скины зашиты под бутылку _(бывш. I-01)_
+- [#4](https://github.com/nicsosin-progovori/s-3dlabs-demo/issues/4) · Сцена — отдельная сущность, объект выбирает сцену
 
 ## I-02 · Позы, состояния и анимация — код под конкретный объект — `discuss`
 **Где:** `app/src/endoMotion.ts` (риг 129 костей, интеграция ремня, коробка/крышка), `EndoScene.tsx`, `bottleMotion.ts`, `bottleCameraMotion.ts`.
@@ -41,6 +42,10 @@ _Заведено 7 ноя 2026 при попытке перенести вто�
 
 **Направление:** масштаб — данные (вопрос из `objectEngine.ts` «ЗО[ВОПРОС] worldScale» — чей он: объект, сцена или мир).
 
+**Решено в [#4](https://github.com/nicsosin-progovori/s-3dlabs-demo/issues/4) (для нового плеера):** объект сообщает свои единицы и поправку (`render.units`, `render.scale`),
+сцена — свои (`coordinates.worldScale`, единиц на метр); движок масштабирует объект, сцена не перестраивается.
+Остаётся: Endo в старом коде (`ENDO_SCALE`) — переносить при миграции Endo как `render.scale` ≈ 12.5/12.
+
 ## I-06 · «Бутылочные» имена и хаки в общих местах — `open`
 - `bottleSoftShadows()` применяется ко **всем** материалам скинов (`skinLoader.ts`) и к Endo/подушке (`sourceModel.ts`, `PillowScene.tsx`).
 - Инвалидация теней — `scene.userData.bottleDecorationVersion` (Endo, подушка, бутылка).
@@ -61,6 +66,29 @@ _Заведено 7 ноя 2026 при попытке перенести вто�
 ## I-09 · Список родителей SKU захардкожен в баре — `open`
 **Где:** `app/src/host/controls/skuSelect.ts` → `PARENTS = ['44-MO9431-C']`.
 **Направление:** список родителей из индекса `skus/` (или API). Для Endo временно добавить `51-P330.90-C`.
+
+## I-10 · Требования сцены к тени и скину, запасные варианты — `discuss`
+_Выделено из [#4](https://github.com/nicsosin-progovori/s-3dlabs-demo/issues/4) (8 ноя 2026)._
+
+**Решение владельца:** главный — объект. Он **независимо** выбирает сцену (`render.scenes`), скин (`render.skin`) и тень (`render.shadow`).
+Сцена выставляет **требования** к тени и скину: что она умеет отрендерить и как. Сошлось — работаем; не сошлось — ошибка.
+
+**Что уже есть (после #4):**
+- Тень → сцена: `shadow.json → needsFromScene` (тень требует от сцены `key.position`, `shadow.radius`, `shadow.lightMapSize`). Плеер проверяет это при загрузке объекта и при каждой смене сцены; не хватает — ошибка.
+- Пул материалов (`player/materials/materialPipeline.ts`): стадии `skin → lod → branding → lighting`. Тень подключается в `lighting`.
+
+**Чего нет:**
+- Сцена → тень: сцена не может сказать «эту тень (или такие её параметры) я не поддерживаю».
+- Сцена → скин: сцена не может разрешить/запретить улучшение скина (`skin.json → enhancement`) — например, свою обработку того, как тень и свет ложатся на шероховатый материал.
+- Запасные варианты: «не умею эту тень — рисую такую». Сейчас сознательно нет — только ошибка.
+
+**Направление (обсудить):**
+- Сцена объявляет, что разрешает: например `allows: { shadows: ["soft-pcss@*"], skinEnhancements: ["lighting"] }`; улучшение скина / тень объявляет, что ему нужно (`requires`). Двусторонняя проверка, как `needsFromScene`.
+- Запасной вариант — только явно объявленный сценой, не молчаливая подмена плеером.
+- Решить, чьи параметры тени в мировых единицах (`soft-pcss.params.scale`, `position`): сейчас они верны только для сцен с `worldScale: 12`.
+- Решить судьбу полей `settings.shadow.*` (кроме `radius`, `lightMapSize`), `shadowMap`, `ao` в сцене: плеер их не читает, это наследие старой студии.
+
+**Где:** `app/src/player/sockets/shadowSocket.ts`, `app/src/player/materials/skinEnhancement.ts`, `app/contracts/scene.schema.json`, `app/contracts/shadow.schema.json`, `docs/architecture/shadow.md`, `docs/architecture/04-scene.md`.
 
 ---
 

@@ -1,7 +1,13 @@
 {
+  "$schema": "../../../app/contracts/scene.schema.json",
   "schemaVersion": 1,
   "id": "source-studio",
   "revision": "v01",
+  "label": {
+    "de": "Source-Studio v01",
+    "en": "Source studio v01",
+    "ru": "Студия Source v01"
+  },
   "engine": "source-studio-v01",
   "coordinates": {
     "modelUnits": "metres",
@@ -141,7 +147,7 @@
     "shadowMap": {
       "productResolution": 4096,
       "groundResolution": 2048,
-      "bias": -0.00003,
+      "bias": -3e-05,
       "normalBias": 0.004
     }
   }

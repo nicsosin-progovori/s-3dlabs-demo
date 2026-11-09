@@ -24,6 +24,7 @@ const objectsRoot=process.env.OBJECTS_DIR??path.resolve(root,'..','objects')
 const skusRoot=process.env.SKUS_DIR??path.resolve(root,'..','skus')
 //ToDo review to delete
 const shadowsRoot=process.env.SHADOWS_DIR??path.resolve(root,'..','shadows')
+const scenesRoot=process.env.SCENES_DIR??path.resolve(root,'..','scenes')
 const allowedOrigins=parseAllowedOrigins(process.env.BOTTLE_ALLOWED_ORIGINS)
 if(production&&!existsSync(path.join(dist,'bottle.html')))throw new Error('Run npm run build before npm start')
 const renderer=createRenderer({root,origin})
@@ -108,6 +109,7 @@ const server=createServer(async(request,response)=>{
     if(url.pathname.startsWith('/skus/')){await staticFile(request,response,url.pathname.replace(/^\/skus/,'')||'/',skusRoot);return}
     //ToDo review to delete
     if(url.pathname.startsWith('/shadows/')){await staticFile(request,response,url.pathname.replace(/^\/shadows/,'')||'/',shadowsRoot);return}
+    if(url.pathname.startsWith('/scenes/')){await staticFile(request,response,url.pathname.replace(/^\/scenes/,'')||'/',scenesRoot);return}
     if(url.pathname.startsWith('/api/')){json(response,404,{error:'Not found'});return}
     if(!['GET','HEAD'].includes(request.method)){response.setHeader('Allow','GET, HEAD');json(response,405,{error:'Method not allowed'});return}
     if(production)await staticFile(request,response,url.pathname)

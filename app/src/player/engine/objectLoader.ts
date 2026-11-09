@@ -9,7 +9,12 @@ export interface ObjectRender {
   defaultState?: string
   /** поверхность скина объекта — app/contracts/skin-surface.schema.json */
   skin?: import('../../../contracts/skin.ts').ObjectSkinSurface
-  scene?: string
+  /** в каких единицах сделан объект; плеер переводит в метры */
+  units?: import('../../../contracts/scene.ts').ObjectUnits
+  /** поправка к масштабу («модель чуть не того размера»), по умолчанию 1 */
+  scale?: number
+  /** сцены, в которых объект хочет рендериться, "<id>@<rev>"; порядок — приоритет (scene-declaration.schema.json) */
+  scenes?: import('../../../contracts/scene.ts').SceneDeclaration
   camera?: string
 }
 export interface ObjectManifest {

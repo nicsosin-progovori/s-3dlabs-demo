@@ -180,23 +180,6 @@
         "sha256": "c5dde1ebf73db6744d612af60acb1417cc21fbe563e796654506dba8e10a0736"
       }
     ],
-    "scene": [
-      {
-        "file": "scene/default.json",
-        "bytes": 49,
-        "sha256": "02e4fe70684fa56fa09689c6e1c4f9aaa566060137450d302ff090b3fe342309"
-      },
-      {
-        "file": "scene/source-studio/v01/scene.json",
-        "bytes": 2623,
-        "sha256": "916f4759156dffcf2a98c3bfb93eccf0da7499d92b20325f7da7cd561741ebd4"
-      },
-      {
-        "file": "scene/source-studio/v02/scene.json",
-        "bytes": 2621,
-        "sha256": "e5252c624c9b45070aa7f6c2395e314aaeaa4a8fb526975055653bb84d896c99"
-      }
-    ],
     "camera": [
       {
         "file": "camera/bottle.json",
@@ -219,6 +202,7 @@
   },
   "render": {
     "units": "metres",
+    "scale": 1,
     "frame": {
       "up": "Y",
       "front": "+Z",
@@ -291,7 +275,9 @@
       "default": "bottle-black@v01",
       "dir": "skins"
     },
-    "scene": "scene/source-studio/v02/scene.json",
+    "scenes": [
+      "source-studio@v02"
+    ],
     "shadow": {
       "use": "soft-pcss@v01",
       "params": {

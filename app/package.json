@@ -35,7 +35,7 @@
     "test:source:assets": "node --test scripts/source-assets.test.mjs",
     "test:bottle": "node --experimental-strip-types --test scripts/bottle-focus.test.mjs scripts/bottle-motion.test.mjs",
     "test:bottle:shadows": "node --experimental-strip-types --test scripts/bottle-shadows.test.mjs",
-    "test:player": "node --experimental-strip-types --test scripts/material-pipeline.test.mjs scripts/shadow-socket.test.mjs scripts/skin-contract.test.mjs scripts/contracts.test.mjs",
+    "test:player": "node --experimental-strip-types --test scripts/material-pipeline.test.mjs scripts/shadow-socket.test.mjs scripts/skin-contract.test.mjs scripts/scene-contract.test.mjs scripts/contracts.test.mjs",
     "test:endo": "node --experimental-strip-types --test scripts/endo-motion.test.mjs",
     "test:pillow": "node --experimental-strip-types --test scripts/pillow-studio.test.mjs",
     "test:pillow:model": "node scripts/blender.mjs --background models/pillow/prepared-v02.blend --python-exit-code 1 --python scripts/pillow-model-qa.py",

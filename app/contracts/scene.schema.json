@@ -1,0 +1,505 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scene.schema.json",
+  "title": "Пакет сцены — scenes/<id>/<rev>/scene.json",
+  "description": "Сцена — павильон: свет, окружение для отражений, фон, экспозиция. Не знает, какой объект в ней стоит. Объект выбирает сцену (render.scenes), сцена масштабирует объект в свои единицы (coordinates.worldScale). Проверяется плеером (src/player/scenes/sceneContract.ts). Документация: docs/architecture/04-scene.md, contracts.md.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "revision",
+    "engine",
+    "coordinates",
+    "settings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+      "description": "совпадает с папкой <id>"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "совпадает с папкой <rev>"
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "engine": {
+      "const": "source-studio-v01",
+      "description": "версия адаптера сцены в плеере (components/Rig.tsx, Backdrop.tsx)"
+    },
+    "coordinates": {
+      "type": "object",
+      "required": [
+        "modelUnits",
+        "worldScale",
+        "up",
+        "groundY",
+        "front"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "modelUnits": {
+          "const": "metres",
+          "description": "в каких единицах сцена принимает объекты; перевод объекта в метры делает движок по render.units/render.scale объекта"
+        },
+        "worldScale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000,
+          "description": "единиц сцены на метр: движок масштабирует ОБЪЕКТ на это число, сцена не перестраивается"
+        },
+        "up": {
+          "const": "Y"
+        },
+        "groundY": {
+          "const": 0
+        },
+        "front": {
+          "const": "+Z"
+        }
+      },
+      "description": "координатный договор сцены"
+    },
+    "settings": {
+      "type": "object",
+      "required": [
+        "exposure",
+        "toneMapping",
+        "shadowType",
+        "background",
+        "ambient",
+        "hemisphere",
+        "key",
+        "fill",
+        "environment",
+        "shadow",
+        "shadowMap",
+        "ao",
+        "revealMs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "exposure": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 4
+        },
+        "toneMapping": {
+          "const": "aces-filmic"
+        },
+        "shadowType": {
+          "const": "basic",
+          "description": "наследие студии; плеер не читает"
+        },
+        "background": {
+          "type": "object",
+          "required": [
+            "top",
+            "bottom"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "top": {
+              "$ref": "#/$defs/color"
+            },
+            "bottom": {
+              "$ref": "#/$defs/color"
+            }
+          },
+          "description": "градиент задника и цвет страницы"
+        },
+        "ambient": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "hemisphere": {
+          "type": "object",
+          "required": [
+            "intensity",
+            "sky",
+            "ground"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "intensity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "sky": {
+              "$ref": "#/$defs/color"
+            },
+            "ground": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "key": {
+          "type": "object",
+          "required": [
+            "position",
+            "target",
+            "color",
+            "intensity"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "position": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -50,
+                "maximum": 50
+              },
+              "description": "позиция в единицах сцены"
+            },
+            "target": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -50,
+                "maximum": 50
+              }
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            }
+          },
+          "description": "ключевой свет; position — направление тени"
+        },
+        "fill": {
+          "type": "object",
+          "required": [
+            "position",
+            "target",
+            "color",
+            "intensity"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "position": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -50,
+                "maximum": 50
+              },
+              "description": "позиция в единицах сцены"
+            },
+            "target": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -50,
+                "maximum": 50
+              }
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            }
+          }
+        },
+        "environment": {
+          "type": "object",
+          "required": [
+            "resolution",
+            "intensity",
+            "surround",
+            "boxes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "resolution": {
+              "enum": [
+                128,
+                256,
+                512,
+                1024
+              ]
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "surround": {
+              "$ref": "#/$defs/color"
+            },
+            "boxes": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 12,
+              "items": {
+                "type": "object",
+                "required": [
+                  "position",
+                  "scale",
+                  "intensity",
+                  "color"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "position": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -50,
+                      "maximum": 50
+                    }
+                  },
+                  "scale": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 30
+                    }
+                  },
+                  "intensity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 20
+                  },
+                  "color": {
+                    "$ref": "#/$defs/color"
+                  }
+                }
+              },
+              "description": "софтбоксы для отражений"
+            }
+          },
+          "description": "окружение для отражений (IBL)"
+        },
+        "shadow": {
+          "type": "object",
+          "required": [
+            "radius",
+            "contact",
+            "opacity",
+            "density",
+            "frames",
+            "resolution",
+            "position",
+            "color",
+            "scale",
+            "compositionScale",
+            "areaSamples",
+            "contactSamples",
+            "lightMapSize"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "размер источника — мягкость края тени (тени: shadow.radius)"
+            },
+            "contact": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "frames": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 128
+            },
+            "resolution": {
+              "enum": [
+                128,
+                256,
+                512,
+                1024,
+                2048
+              ]
+            },
+            "position": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -30,
+                "maximum": 30
+              },
+              "description": "приёмник; высота строго 0.002"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "scale": {
+              "type": "number",
+              "minimum": 4,
+              "maximum": 40
+            },
+            "compositionScale": {
+              "type": "number",
+              "minimum": 4,
+              "maximum": 40
+            },
+            "areaSamples": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "contactSamples": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "lightMapSize": {
+              "enum": [
+                128,
+                256,
+                512,
+                1024
+              ],
+              "description": "размер карты теней — чёткость (тени: shadow.lightMapSize)"
+            }
+          },
+          "description": "плеер читает только radius и lightMapSize; остальное — наследие студии (см. ISSUES.md I-10)"
+        },
+        "shadowMap": {
+          "type": "object",
+          "required": [
+            "productResolution",
+            "groundResolution",
+            "bias",
+            "normalBias"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "productResolution": {
+              "enum": [
+                128,
+                256,
+                512,
+                1024,
+                2048,
+                4096
+              ]
+            },
+            "groundResolution": {
+              "enum": [
+                128,
+                256,
+                512,
+                1024,
+                2048,
+                4096
+              ]
+            },
+            "bias": {
+              "type": "number",
+              "minimum": -0.01,
+              "maximum": 0.01
+            },
+            "normalBias": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.1
+            }
+          },
+          "description": "наследие студии; плеер не читает"
+        },
+        "ao": {
+          "type": "object",
+          "required": [
+            "resolutionScale",
+            "intensity",
+            "radius",
+            "thickness",
+            "samples"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "resolutionScale": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 2
+            },
+            "thickness": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 1
+            },
+            "samples": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            }
+          },
+          "description": "наследие студии; плеер не читает"
+        },
+        "revealMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        }
+      }
+    }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^#[a-fA-F0-9]{6}$"
+    }
+  }
+}

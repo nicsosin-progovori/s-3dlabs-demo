@@ -28,7 +28,7 @@ _Статус: **реализовано в плеере, на ревью** (8 н
 `objects/<id>/<rev>/manifest.json`:
 ```json
 "render": {
-  "scene": "scene/source-studio/v02/scene.json",
+  "scenes": ["source-studio@v02"],
   "shadow": { "use": "soft-pcss@v01", "params": { "opacity": 0.48, "contact": 0.22, "position": [1, 0.002, 0] } }
 }
 ```
