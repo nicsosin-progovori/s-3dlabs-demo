@@ -11,6 +11,9 @@ app/contracts/
   skin-surface.schema.json       — что объект принимает как скин: manifest.render.skin
   skin.schema.json               — скин: <dir>/<id>/<rev>/skin.json
   skin-enhancement.schema.json   — улучшение скина: поле "enhancement" в skin.json
+  scene.schema.json              — сцена: scenes/<id>/<rev>/scene.json
+  scene-declaration.schema.json  — выбор сцен объектом: manifest.render.scenes
+  scene.ts                       — типы сцены (+ единицы объекта)
   skin.ts                        — типы скина
   shadow.ts                      — типы TypeScript для этих JSON (для кода плеера)
   skinEnhancement.ts
@@ -32,7 +35,10 @@ flowchart TD
   SKU -->|skin: id@rev| SK["objects/…/&lt;dir&gt;/&lt;id&gt;/&lt;rev&gt;/skin.json<br/>sha в manifest.parts.skins<br/>skin.schema.json"]
   M -->|render.skin: совместимость, слоты<br/>skin-surface.schema.json| SK
   SK -->|enhancement: file+sha256<br/>skin-enhancement.schema.json| EJ["…/enhancement.js"]
-  M -->|render.scene| SC["scene.json<br/>свет: направление и чёткость тени"]
+  M -->|render.scenes: [id@rev, …] — первая<br/>scene-declaration.schema.json| SC["scenes/&lt;id&gt;/&lt;rev&gt;/scene.json<br/>scene.schema.json"]
+  H["хост: s3d:scene"] -.->|смена сцены у показанного объекта| SC
+  SC -->|свет: направление и чёткость тени<br/>needsFromScene| SH
+  SC -->|code: file+sha256| SCJ["scenes/…/scene.js<br/>слот сцены"]
   M -->|render.shadow.use: id@rev<br/>shadow-declaration.schema.json| SH["shadows/&lt;id&gt;/&lt;rev&gt;/shadow.json<br/>shadow.schema.json"]
   SH -->|entry: file+sha256| SJ["shadows/…/shadow.js"]
   M -->|render.shadow.params| P["проверка по SH.params"]
@@ -49,9 +55,13 @@ flowchart TD
 | 5 | `shadows/<id>/<rev>/shadow.json` | `player/sockets/shadowSocket.ts` | `shadow.schema.json` | `error` |
 | 5a | `render.shadow.params` | `resolveShadowParams` | `params` из `shadow.json` выбранной тени | параметр вне границ / лишний → `error` |
 | 5b | `shadows/…/shadow.js` | `player/packages/packageCode.ts` | размер + sha256 из `entry`, `apiVersion` | `error` |
-| 6 | `scene.json` (свет для тени) | `sceneShadowLight` | `key.position`, `shadow.radius`, `shadow.lightMapSize` | нет света → `error` |
+| 6 | `manifest.render.scenes` | `player/scenes/sceneContract.ts` (`sceneDeclaration`) | `scene-declaration.schema.json` | нет поля / пусто / неверный ключ / дубль → `error` |
+| 6a | `manifest.render.units`, `render.scale` | `objectToMetres` | `scene.ts` (`ObjectUnits`); `scale` > 0, по умолчанию 1 | неизвестные единицы / неверная поправка → `error` |
+| 7 | `scenes/<id>/<rev>/scene.json` | `player/scenes/sceneLoader.ts` + `sceneContract.ts` | `scene.schema.json`, ≤ 64 КиБ | нет файла / битый JSON / вне контракта / чужая identity → `error` (и при смене сцены хостом) |
+| 7b | `scene.json` → `code` + код сцены | `player/sockets/sceneSocket.ts` + `packages/packageCode.ts` | `scene.schema.json` (`code`); размер + sha256, `apiVersion` | `error` |
+| 7a | свет сцены для тени | `shadowLightFromScene` (`shadowSocket.ts`) | `needsFromScene` тени + `key.position`, `shadow.radius`, `shadow.lightMapSize` | чего-то нет → `error` (проверяется при каждой смене сцены) |
 
-Пути: объекты — `/objects/`, SKU — `/skus/`, тени — `/shadows/` (сервер, `OBJECTS_DIR` / `SKUS_DIR` / `SHADOWS_DIR`). Пути внутри пакетов — от папки пакета, без `..` и без ведущего `/`.
+Пути: объекты — `/objects/`, SKU — `/skus/`, тени — `/shadows/`, сцены — `/scenes/` (сервер, `OBJECTS_DIR` / `SKUS_DIR` / `SHADOWS_DIR` / `SCENES_DIR`). Пути внутри пакетов — от папки пакета, без `..` и без ведущего `/`.
 
 ## Правила для любого нового контракта
 

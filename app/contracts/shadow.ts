@@ -27,7 +27,7 @@ export interface ShadowDescriptor {
   apiVersion: number
   /** код тени, путь от папки пакета; проверяется по размеру и sha256 до исполнения */
   entry: { file: string; sha256: string; bytes: number }
-  /** справочно: какие значения света сцены использует тень */
+  /** требования тени к сцене: пути в scene.settings (напр. "key.position"); плеер проверяет при каждой смене сцены */
   needsFromScene?: string[]
   params: Record<string, ShadowParamSpec>
 }

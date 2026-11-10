@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import {readFileSync,existsSync,readdirSync} from 'node:fs'
 import {shadowDeclaration,resolveShadowParams,validateShadowDescriptor} from '../src/player/sockets/shadowSocket.ts'
 import {skinSurface,skinFile,parseSkinKey,validateSkinManifest} from '../src/player/materials/skinContract.ts'
+import {sceneDeclaration,objectToMetres,validateSceneProfile} from '../src/player/scenes/sceneContract.ts'
+import {checkShadowNeeds} from '../src/player/sockets/shadowSocket.ts'
 
 // Контракты данных (app/contracts/*.schema.json) ↔ реальные файлы проекта.
 // Валидатор JSON Schema пока не подключён: проверяем строгими проверками плеера
@@ -61,6 +63,37 @@ test('every object declares its skin surface; every packaged skin fits the objec
         for(const key of schema.required)assert.ok(key in d,`${part.file}: missing ${key}`)
         for(const key of Object.keys(d))assert.ok(key in schema.properties,`${part.file}: ${key} is not in the contract`)
         validateSkinManifest(d,{id:m[1],revision:m[2]},surface)
+      }
+    }
+})
+
+test('every scene package follows scene.schema.json and the player contract',()=>{
+  const schema=json(new URL('scene.schema.json',contracts))
+  for(const id of readdirSync(new URL('scenes/',root),{withFileTypes:true}).filter(d=>d.isDirectory()).map(d=>d.name))
+    for(const rev of readdirSync(new URL(`scenes/${id}/`,root))){
+      const file=new URL(`scenes/${id}/${rev}/scene.json`,root),d=json(file)
+      assert.ok(existsSync(new URL(d.$schema,file)),`${id}@${rev}: $schema must point to the contract`)
+      for(const key of schema.required)assert.ok(key in d,`${id}@${rev}: missing ${key}`)
+      for(const key of Object.keys(d))assert.ok(key in schema.properties,`${id}@${rev}: ${key} is not in the contract`)
+      for(const key of Object.keys(d.settings))assert.ok(key in schema.properties.settings.properties,`${id}@${rev}: settings.${key} is not in the contract`)
+      validateSceneProfile(d,{id,revision:rev})
+    }
+})
+
+test('every object names existing scenes, brings its units, and its shadow fits every chosen scene',()=>{
+  for(const id of readdirSync(new URL('objects/',root),{withFileTypes:true}).filter(d=>d.isDirectory()).map(d=>d.name))
+    for(const rev of readdirSync(new URL(`objects/${id}/`,root),{withFileTypes:true}).filter(d=>d.isDirectory()).map(d=>d.name)){
+      const manifest=json(new URL(`objects/${id}/${rev}/manifest.json`,root))
+      assert.ok(!('scene' in manifest.render),`${id}@${rev}: render.scene is replaced by render.scenes`)
+      assert.ok(!('scene' in manifest.parts),`${id}@${rev}: scenes are not part of the object package`)
+      objectToMetres(manifest.render)
+      const decl=shadowDeclaration(manifest.render)
+      const shadow=decl&&json(new URL(`shadows/${decl.use.replace('@','/')}/shadow.json`,root))
+      for(const key of sceneDeclaration(manifest.render)){
+        const [sid,srev]=key.split('@'),file=new URL(`scenes/${sid}/${srev}/scene.json`,root)
+        assert.ok(existsSync(file),`${id}@${rev}: scene ${key} does not exist`)
+        const scene=validateSceneProfile(json(file),{id:sid,revision:srev})
+        if(shadow)checkShadowNeeds(shadow,scene.settings)
       }
     }
 })

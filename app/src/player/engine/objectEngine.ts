@@ -1,12 +1,11 @@
-import { Box3, Group, Vector3 } from 'three'
+import type { Group } from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { LoadedObject } from './objectLoader'
 import { partUrl } from './objectLoader'
 import { loadSkin, bindSkin, type SkinBinding, type SkinBundle } from '../materials/skinLoader'
 import { parseSkinKey, skinFile, skinSurface } from '../materials/skinContract'
-import { loadShadow, sceneShadowLight, shadowDeclaration, type PreparedShadow, type SceneShadowLight } from '../sockets/shadowSocket'
-import { compositionFrame } from '../../compositionCamera'
-import { validateSceneProfile } from '../../../shared/sceneContract.mjs'
+import { loadShadow, shadowDeclaration, type PreparedShadow } from '../sockets/shadowSocket'
+import { objectToMetres, sceneDeclaration, type SceneDeclaration } from '../scenes/sceneContract'
 import { validateCameraViews } from '../../../shared/cameraViewsContract.mjs'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -21,16 +20,25 @@ import { validateCameraViews } from '../../../shared/cameraViewsContract.mjs'
  * Это пометки для разбора, НЕ финальная архитектура. Поведение не меняем.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/** Объект, собранный НЕЗАВИСИМО от сцены: геометрия, скин, тень, ракурс, единицы.
+ *  В сцену его ставит placeInScene() (engine/placement.ts) — при загрузке и при каждой смене сцены. */
 export interface BuiltObject {
   root: Group
-  scene: any | null
-  camera: { position: [number, number, number]; target: [number, number, number]; fov: number; roll: number; near: number; far: number }
-  shadowScale: number
+  /** сцены, в которых объект хочет рендериться (render.scenes), по приоритету */
+  scenes: SceneDeclaration
+  /** во сколько раз умножить геометрию, чтобы получить метры (render.units × render.scale) */
+  toMetres: number
+  /** границы кадра в единицах объекта (render.frame.boundsByState[state]); null — считать по геометрии */
+  bounds: { min: [number, number, number]; max: [number, number, number] } | null
+  /** пол объявлен объектом (frame.floor === 'Y0') — не приземляем */
+  floorDeclared: boolean
+  /** ракурс по умолчанию из каталога камер объекта; null — дефолты плеера */
+  view: any | null
   /** живая привязка скина — через неё меняем скин без перезагрузки геометрии */
   skin: SkinBinding | null
   skinKey: string | null
-  /** тень, которую выбрал объект (пакет из shadows/), и свет сцены для неё; null — объект явно без тени */
-  shadow: { prepared: PreparedShadow; light: SceneShadowLight } | null
+  /** тень, которую выбрал объект (пакет из shadows/); null — объект явно без тени */
+  shadow: PreparedShadow | null
   note: string
 }
 
@@ -46,16 +54,23 @@ export async function loadSkinBundle(o: LoadedObject, skinKey: string, signal: A
   return loadSkin(ref, 'final', signal, 'high', { basePath: o.base, surface, descriptor: { file: entry.file, sha256: entry.sha256, bytes: entry.bytes } })
 }
 
-async function fetchJson(base: string, ref: string) {
-  const r = await fetch(partUrl(base, ref), { cache: 'no-store', headers: { Accept: 'application/json' } })
+async function fetchJson(base: string, ref: string, signal?: AbortSignal) {
+  const r = await fetch(partUrl(base, ref), { cache: 'no-store', headers: { Accept: 'application/json' }, signal })
   if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + ref)
   return r.json()
 }
 
 /** ЕДИНЫЙ generic-движок. Читает только manifest.render.*, применяет общие правила.
- *  Кода «про конкретный объект» здесь нет — но решений о границах пока много (см. ЗО[...]). */
-export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, viewport?: { width: number; height: number }, skinKey?: string): Promise<BuiltObject> {
+ *  Кода «про конкретный объект» здесь нет — но решений о границах пока много (см. ЗО[...]).
+ *  Сцену НЕ грузит: сцена — отдельная сущность (scenes/), её ставит плеер; объект в неё — engine/placement.ts. */
+export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, skinKey?: string): Promise<BuiltObject> {
   const r: any = o.manifest.render ?? {}
+
+  // ЗО[ОБЪЕКТ]: в какой сцене рендериться, выбирает объект (render.scenes, порядок = приоритет).
+  // ЗО[ОБЪЕКТ]: в каких единицах сделан объект и поправка к масштабу (render.units, render.scale).
+  // Строго и заранее: без сцен или с непонятными единицами объект не показываем.
+  const scenes = sceneDeclaration(r)
+  const toMetres = objectToMetres(r)
 
   // ЗО[ВОПРОС]: какое состояние показываем по умолчанию? Сейчас берёт объект (defaultState),
   // иначе — первое из границ, иначе 'default'. Выбор состояния — это объект, студия или UI плеера?
@@ -87,26 +102,13 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
     note = 'скин ' + useSkin
   }
 
-  // ЗО[ОБЪЕКТ]: сцена/свет/тени/окружение — данные объекта (render.scene → контракт сцены).
-  // ЗО[СТУДИЯ?]: но «как объект показывается» (свет, тени, задник) — кандидат в отдельный слой
-  //   «студия/клиент». Сейчас это физически лежит в пакете объекта. Твоё решение: часть объекта
-  //   или сменная студия поверх объекта?
-  // ЗО[ВОПРОС]: worldScale (перевод модели в мир) берём из сцены объекта. Это свойство объекта,
-  //   студии или общего мира сцены? Сейчас — объект (через сцену).
-  let scene: any = null, worldScale = 1
-  if (r.scene) {
-    try { const prof: any = validateSceneProfile(await fetchJson(o.base, r.scene)); scene = prof.settings; worldScale = prof.coordinates?.worldScale ?? 1; note += ' + сцена' }
-    catch (e) { note += ' (сцена: ' + ((e as Error)?.message ?? e) + ')' }
-  }
-
   // ЗО[ОБЪЕКТ]: тень выбирает объект (render.shadow → пакет из shadows/). Движок тень не содержит.
-  // ЗО[ГРАНИЦА]: направление и чёткость тени — от света СЦЕНЫ; вид тени — от пакета тени.
-  // Строго: объект обязан объявить тень (или null); пакет/параметры/свет не сошлись — ошибка сборки.
+  // ЗО[ГРАНИЦА]: направление и чёткость тени — от света СЦЕНЫ (подставляется в placeInScene);
+  //   вид тени — от пакета тени. Строго: объект обязан объявить тень (или null).
   const shadowDecl = shadowDeclaration(r)
-  let shadow: BuiltObject['shadow'] = null
+  let shadow: PreparedShadow | null = null
   if (shadowDecl) {
-    const light = sceneShadowLight(scene)
-    shadow = { prepared: await loadShadow(shadowDecl, signal), light }
+    shadow = await loadShadow(shadowDecl, signal)
     note += ' + тень ' + shadowDecl.use
   }
 
@@ -118,54 +120,17 @@ export async function buildFromManifest(o: LoadedObject, signal: AbortSignal, vi
   let view: any = null
   if (r.camera) {
     try {
-      const cat: any = validateCameraViews(await fetchJson(o.base, r.camera))
+      const cat: any = validateCameraViews(await fetchJson(o.base, r.camera, signal))
       const s = cat.states?.[state]
       view = (s?.views?.find((v: any) => v.id === s.defaultView) ?? s?.views?.[0])?.camera ?? null
     } catch { /* камера некритична */ }
   }
 
-  // ЗО[ОБЩЕЕ]: масштаб в мир — равномерный setScalar(worldScale). Ось не вращаем: движок
-  //   ПРЕДПОЛАГАЕТ, что геометрия уже в системе движка (Y вверх, +Z вперёд) — это объект
-  //   декларирует в render.frame.up/front, но движок это НЕ проверяет и НЕ доворачивает.
-  //   ЗО[ВОПРОС]: если объект приедет с другой осью (напр. Z вверх), сейчас будет криво.
-  //   Кто приводит объект к системе движка — подготовка объекта или движок по данным frame?
-  root.scale.setScalar(worldScale)
-  root.updateMatrixWorld(true)
-
-  // ЗО[ОБЪЕКТ]: границы кадра объект привозит сам (frame.boundsByState, уже в метрах/системе движка).
-  // ЗО[ОБЪЕКТ]: пол объявлен объектом (frame.floor==='Y0') → не приземляем. Иначе — приземляем (общий фолбэк).
-  // ЗО[ОБЩЕЕ]: приземление/фолбэк по bbox — общее правило.
   const declared = r.frame?.boundsByState?.[state]
-  let box: Box3
-  if (declared?.min && declared?.max) {
-    box = new Box3(new Vector3(...declared.min).multiplyScalar(worldScale), new Vector3(...declared.max).multiplyScalar(worldScale))
-    if (r.frame?.floor !== 'Y0') { const g = new Box3().setFromObject(root); root.position.y += box.min.y - g.min.y; root.updateMatrixWorld(true) }
-  } else {
-    const g = new Box3().setFromObject(root); root.position.y -= g.min.y; root.updateMatrixWorld(true)
-    box = new Box3().setFromObject(root)
-  }
-
-  // ЗО[ОБЩЕЕ]: compositionFrame — общая математика кадра (одинаковая для всех объектов).
-  // ЗО[ПОЛИТИКА]: дефолты, когда у объекта НЕТ камеры (az 24, el 0.3, fov 28, margin 1.12) — выбор плеера.
-  // ЗО[ОБЩЕЕ]: аспект берём из окна (runtime плеера), subject/zoom — из данных объекта.
-  const size = box.getSize(new Vector3())
-  const maxDim = Math.max(size.x, size.y, size.z) || 3
-  // ЗО[ОБЩЕЕ]: аспект — размер области плеера (передаёт плеер); фолбэк — окно.
-  const vw = viewport?.width ?? (typeof window !== 'undefined' ? window.innerWidth : 1440)
-  const vh = viewport?.height ?? (typeof window !== 'undefined' ? window.innerHeight : 1000)
-  const f = compositionFrame(box, view?.azimuth ?? 24, view?.elevation ?? 0.3, vw, vh, {
-    fov: view?.fov ?? 28, roll: view?.roll ?? 0, margin: view?.margin ?? 1.12, subject: view?.subject ?? [0, 0], zoom: view?.zoom ?? 1,
-  })
   return {
-    root, scene,
-    camera: {
-      position: f.position.toArray() as [number, number, number],
-      target: f.target.toArray() as [number, number, number],
-      fov: f.fov, roll: f.roll ?? 0,
-      // ЗО[ОБЪЕКТ]: near/far объект объявляет в ракурсе; дефолт (0.025/100) — ЗО[ПОЛИТИКА] плеера.
-      near: view?.near ?? 0.025, far: view?.far ?? 100,
-    },
-    // ЗО[ПОЛИТИКА]: размер контактной тени = maxDim*1.5 — эвристика плеера, не данные объекта.
-    shadowScale: maxDim * 1.5, skin, skinKey: useSkin, shadow, note,
+    root, scenes, toMetres,
+    bounds: declared?.min && declared?.max ? { min: [...declared.min] as [number, number, number], max: [...declared.max] as [number, number, number] } : null,
+    floorDeclared: r.frame?.floor === 'Y0',
+    view, skin, skinKey: useSkin, shadow, note,
   }
 }

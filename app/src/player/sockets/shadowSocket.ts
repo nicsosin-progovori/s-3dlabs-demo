@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { Camera, Material, Object3D, Scene, WebGLRenderer } from 'three'
 import { attachProcessor, type MaterialProcessor, type ProcessorHandle } from '../materials/materialPipeline.ts'
 import { fetchVerified, importCode } from '../packages/packageCode.ts'
+import { sceneValue, type SceneSettings } from '../scenes/sceneContract.ts'
 import type { SceneShadowLight, ShadowDeclaration, ShadowDescriptor, ShadowParamSpec } from '../../../contracts/shadow.ts'
 export type { SceneShadowLight, ShadowDeclaration, ShadowDescriptor, ShadowParamSpec }
 
@@ -72,6 +73,20 @@ export function shadowDeclaration(render: Record<string, unknown>): ShadowDeclar
   if (!value || typeof value !== 'object' || typeof value.use !== 'string' || !KEY.test(value.use)) throw new Error('Invalid render.shadow: expected { use: "<id>@<rev>", params? }')
   if (value.params !== undefined && (typeof value.params !== 'object' || value.params === null || Array.isArray(value.params))) throw new Error('Invalid render.shadow.params')
   return value
+}
+
+/** Требования тени к СЦЕНЕ (shadow.json → needsFromScene, пути в scene.settings).
+ *  Проверяется при загрузке объекта и при КАЖДОЙ смене сцены. Строго: чего-то нет — ошибка.
+ *  Обратное направление (что сцена разрешает тени) — ISSUES.md I-10. */
+export function checkShadowNeeds(descriptor: Pick<ShadowDescriptor, 'id' | 'revision' | 'needsFromScene'>, settings: SceneSettings): void {
+  const missing = (descriptor.needsFromScene ?? []).filter(path => sceneValue(settings, path) === undefined)
+  if (missing.length) throw new Error(`Shadow ${descriptor.id}@${descriptor.revision} needs from the scene: ${missing.join(', ')}`)
+}
+
+/** Свет для тени из сцены: сначала требования тени, затем направление и чёткость. */
+export function shadowLightFromScene(prepared: PreparedShadow, settings: SceneSettings): SceneShadowLight {
+  checkShadowNeeds(prepared.descriptor, settings)
+  return sceneShadowLight(settings)
 }
 
 /** Свет для тени из настроек СЦЕНЫ. Строго: без ключевого света тени не бывает. */
